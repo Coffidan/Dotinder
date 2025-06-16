@@ -15,7 +15,7 @@ Roadmap.
 v1:
 
   •Регистрация и вход
-    `*`Авторизация через Steam (OAuth2) + email/password (JWT)
+    *Авторизация через Steam (OAuth2) + email/password (JWT)
     `*`Подтверждение email (если регистрация не через Steam)
   •Профиль игрока
     `*`Привязка аккаунта Dota 2 (Steam ID, MMR, основные роли)
