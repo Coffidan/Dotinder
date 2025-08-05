@@ -1,0 +1,12 @@
+# Игнор для Java/Spring
+target/
+.idea/
+*.class
+*.jar
+
+# Игнор для Node.js/React
+node_modules/
+.env
+
+# Игнор для Docker
+*.log
