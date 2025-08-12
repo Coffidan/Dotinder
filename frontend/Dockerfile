@@ -1,12 +1,15 @@
 # Stage 1: Сборка React
 FROM node:18-alpine AS build
 WORKDIR /app
+
+# Устанавливаем зависимости
 COPY package*.json ./
 RUN npm ci --include=dev
+
+# Копируем исходный код
 COPY . .
-# Устанавливаем правильные права
-RUN chown -R node:node /app
-USER node
+
+# Собираем приложение
 RUN npm run build
 
 # Stage 2: Production с Nginx
