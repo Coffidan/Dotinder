@@ -1,0 +1,24 @@
+package com.dotinder.backend.config;
+
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.server.ServerHttpRequest;
+import org.springframework.http.server.ServletServerHttpRequest;
+import org.springframework.web.socket.WebSocketHandler;
+import org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor;
+
+import java.util.Map;
+
+public class CustomHandshakeInterceptor extends HttpSessionHandshakeInterceptor {
+    @Override
+    public boolean beforeHandshake(ServerHttpRequest request, org.springframework.http.server.ServerHttpResponse response,
+                                   WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
+        if (request instanceof ServletServerHttpRequest servletRequest) {
+            HttpServletRequest httpReq = servletRequest.getServletRequest();
+            String steamId = (String) httpReq.getSession().getAttribute("steamId");
+            if (steamId != null) {
+                attributes.put("steamId", steamId);
+            }
+        }
+        return super.beforeHandshake(request, response, wsHandler, attributes);
+    }
+}
