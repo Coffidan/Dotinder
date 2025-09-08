@@ -13,10 +13,10 @@ public class Message {
     private Long id;
 
     @ManyToOne
-    private User sender;     // Отправитель
+    private Players sender;     // Отправитель
 
     @ManyToOne
-    private User receiver;   // Получатель
+    private Players receiver;   // Получатель
 
     private String text;     // Текст сообщения
     private LocalDateTime timestamp;  // Время отправки

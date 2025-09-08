@@ -11,10 +11,10 @@ public class Swipe {
     private Long id;
 
     @ManyToOne  // Связь с User (кто свайпнул)
-    private User userFrom;
+    private Players playersFrom;
 
     @ManyToOne  // Кого свайпнули
-    private User userTo;
+    private Players playersTo;
 
     private boolean isLike;   // true = like, false = dislike
     private boolean isMatch;  // true, если взаимный like
