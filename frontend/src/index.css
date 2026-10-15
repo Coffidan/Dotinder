@@ -1,47 +1,662 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
 body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: #f5f5f5;
-    min-height: 100vh;
+  font-family: 'Rajdhani', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #e4e4e4;
+  background:
+    radial-gradient(ellipse at top, rgba(199, 39, 49, 0.16) 0%, transparent 55%),
+    radial-gradient(ellipse at bottom, rgba(46, 204, 113, 0.12) 0%, transparent 55%),
+    linear-gradient(180deg, #05070a 0%, #0b0e13 40%, #07090d 100%);
+  background-attachment: fixed;
+  background-size: 120% 120%, 120% 120%, 100% 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+  animation: bgDrift 18s ease-in-out infinite;
 }
 
-#root {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255,255,255,0.012) 0px,
+    rgba(255,255,255,0.012) 1px,
+    transparent 1px,
+    transparent 10px
+  );
+  pointer-events: none;
+  z-index: 0;
 }
 
-/* Центрирование контента */
+h1, h2, h3, h4, h5, h6, .title-font {
+  font-family: 'Cinzel', 'Rajdhani', serif;
+  letter-spacing: 0.02em;
+}
+
 .centered-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    text-align: center;
-    padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 80px);
+  text-align: center;
+  padding: 20px;
+  position: relative;
+  z-index: 1;
 }
 
-/* Стили для карточек */
 .card-container {
-    max-width: 600px;
-    width: 100%;
-    margin: 0 auto;
-    padding: 20px;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px 20px 60px;
+  position: relative;
+  z-index: 1;
 }
 
-/* Стили для сообщений */
-.message-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 50vh;
-    text-align: center;
-    padding: 40px 20px;
+/* ============ Login Page ============ */
+.login-page {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 0;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
 }
 
-/* Top brand bar */
-.brand-bar { background:#333; color:#fff; height:56px; display:flex; align-items:center; justify-content:center; }
-.brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:20px; }
-.brand-logo { width:28px; height:28px; border-radius:6px; background:#47A1FF; color:#fff; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:800; }
+.login-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(253,203,110,0.03) 49px, rgba(253,203,110,0.03) 50px),
+    repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(253,203,110,0.03) 49px, rgba(253,203,110,0.03) 50px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.login-content {
+  position: relative;
+  z-index: 2;
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.login-content.login-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.login-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.login-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 4px;
+  opacity: 0.8;
+}
+.login-bar-top {
+  top: 0;
+  background: linear-gradient(90deg, rgba(199,39,49,0) 0%, #c72731 25%, #fdcb6e 50%, #2ecc71 75%, rgba(46,204,113,0) 100%);
+}
+.login-bar-bottom {
+  bottom: 0;
+  background: linear-gradient(90deg, rgba(46,204,113,0) 0%, #2ecc71 25%, #fdcb6e 50%, #c72731 75%, rgba(199,39,49,0) 100%);
+}
+
+.login-international {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.login-international span {
+  letter-spacing: 0.4em;
+  font-size: 11px;
+  color: #a7b0bd;
+  font-weight: 700;
+}
+.login-line {
+  width: 48px;
+  height: 2px;
+  border-radius: 1px;
+}
+.login-line-left {
+  background: linear-gradient(90deg, transparent, rgba(199,39,49,0.7));
+}
+.login-line-right {
+  background: linear-gradient(90deg, rgba(46,204,113,0.7), transparent);
+}
+
+.dota-logo {
+  position: relative;
+  width: 132px;
+  height: 132px;
+  margin: 0 auto 12px;
+}
+.dota-logo-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 22px;
+  background: conic-gradient(from 0deg, #c72731 0%, #fdcb6e 25%, #2ecc71 50%, #fdcb6e 75%, #c72731 100%);
+  filter: blur(14px);
+  opacity: 0.55;
+  animation: crestSpin 9s linear infinite;
+}
+.dota-logo-inner {
+  position: absolute;
+  inset: 2px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(28,36,46,0.96) 0%, rgba(10,14,20,0.98) 50%, rgba(28,36,46,0.96) 100%);
+  border: 1px solid rgba(253,203,110,0.45);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 16px 48px rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.dota-logo-inner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 25% 20%, rgba(199,39,49,0.18), transparent 55%),
+    radial-gradient(circle at 75% 80%, rgba(46,204,113,0.18), transparent 55%);
+}
+.dota-logo-letter {
+  font-family: 'Cinzel', serif;
+  font-weight: 900;
+  font-size: 52px;
+  line-height: 1;
+  position: relative;
+  z-index: 1;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.dota-logo-letter.dire {
+  background: linear-gradient(180deg, #ff8f94 0%, #c72731 55%, #5b0e10 100%);
+  text-shadow: 0 0 28px rgba(199,39,49,0.4);
+  transform: translateY(4px);
+}
+.dota-logo-letter.radiant {
+  background: linear-gradient(180deg, #8ff0b8 0%, #1ea85a 55%, #083e22 100%);
+  text-shadow: 0 0 28px rgba(46,204,113,0.4);
+}
+
+.login-title {
+  font-weight: 900;
+  margin-bottom: 4px;
+  font-size: clamp(40px, 6vw, 52px);
+  background: linear-gradient(180deg, #fff7d6 0%, #fdcb6e 45%, #d99a2c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 36px rgba(253,203,110,0.25);
+}
+
+.login-subtitle {
+  color: #a7b0bd;
+  letter-spacing: 0.35em;
+  font-size: 12px;
+  margin-bottom: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.dota-chip {
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  font-size: 10.5px;
+  padding: 0 2px;
+}
+.dire-chip {
+  background: linear-gradient(180deg, rgba(199,39,49,0.22), rgba(199,39,49,0.08)) !important;
+  color: #ff6b6b !important;
+  border: 1px solid rgba(199,39,49,0.45) !important;
+}
+.sword-chip {
+  background: transparent !important;
+  color: #fdcb6e !important;
+  font-weight: 900 !important;
+  font-size: 11px !important;
+}
+.radiant-chip {
+  background: linear-gradient(180deg, rgba(46,204,113,0.22), rgba(46,204,113,0.08)) !important;
+  color: #55efc4 !important;
+  border: 1px solid rgba(46,204,113,0.45) !important;
+}
+
+.login-divider {
+  border-color: rgba(253,203,110,0.18) !important;
+  margin-bottom: 12px !important;
+}
+
+.login-description {
+  color: #d4d9df;
+  text-align: center;
+  margin-bottom: 12px;
+  font-size: clamp(15px, 2vw, 17px);
+  line-height: 1.65;
+}
+
+.login-feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(253,203,110,0.08);
+}
+.login-feature.dire {
+  background: rgba(199,39,49,0.05);
+}
+.login-feature.radiant {
+  background: rgba(46,204,113,0.05);
+}
+.login-feature-text {
+  color: #c4cdd6;
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+/* ============ Dota Navbar ============ */
+.dota-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: linear-gradient(180deg, rgba(8,10,16,0.98) 0%, rgba(10,14,22,0.92) 100%);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border-bottom: 1px solid rgba(253, 203, 110, 0.28);
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.65), inset 0 -1px 0 rgba(255,255,255,0.03);
+}
+.dota-navbar::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, #c72731 20%, #fdcb6e 50%, #2ecc71 80%, transparent 100%);
+  background-size: 200% 100%;
+  animation: borderShimmer 5s linear infinite;
+}
+
+.dota-navbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dota-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.dota-brand-logo {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dota-brand-logo::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  padding: 1.5px;
+  background: linear-gradient(135deg, #c72731, #fdcb6e, #2ecc71);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.dota-brand-logo-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 9px;
+  background:
+    radial-gradient(circle at 25% 25%, rgba(255,255,255,0.12), transparent 60%),
+    linear-gradient(145deg, rgba(20,26,36,0.98), rgba(8,10,16,0.98));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cinzel', serif;
+  font-weight: 900;
+  font-size: 20px;
+  color: #fdcb6e;
+  text-shadow: 0 0 14px rgba(253,203,110,0.5);
+  animation: logoPulseRing 2.8s ease-out infinite;
+}
+
+.dota-brand-text {
+  font-family: 'Cinzel', serif;
+  font-weight: 900;
+  font-size: 20px;
+  background: linear-gradient(180deg, #fff3c4 0%, #fdcb6e 55%, #e1a336 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: brandGlow 4s ease-in-out infinite;
+}
+
+.dota-nav-links {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.dota-nav-btn {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+  font-size: 13.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #b9c2cd;
+  padding: 7px 13px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.dota-nav-btn:hover {
+  color: #fdcb6e;
+  border-color: rgba(253, 203, 110, 0.3);
+  background: rgba(253, 203, 110, 0.06);
+  transform: translateY(-1px);
+}
+.dota-nav-btn.active {
+  color: #fff;
+  border-color: rgba(199, 39, 49, 0.55);
+  background: linear-gradient(180deg, rgba(199,39,49,0.32), rgba(199,39,49,0.12));
+  box-shadow: 0 0 16px rgba(199, 39, 49, 0.25);
+}
+
+.dota-logout-btn {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 12.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ff8f94;
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(199, 39, 49, 0.45);
+  background: linear-gradient(180deg, rgba(199,39,49,0.18), rgba(199,39,49,0.05));
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.dota-logout-btn:hover {
+  color: #fff;
+  background: linear-gradient(180deg, #c72731, #8f1e22);
+  border-color: rgba(253, 203, 110, 0.45);
+  box-shadow: 0 4px 18px rgba(199, 39, 49, 0.45);
+  transform: translateY(-1px);
+}
+
+/* ============ Dota Panel / Card ============ */
+.dota-panel {
+  background: linear-gradient(180deg, rgba(28, 36, 46, 0.88) 0%, rgba(16, 22, 30, 0.92) 100%);
+  border: 1px solid rgba(253, 203, 110, 0.22);
+  border-radius: 12px;
+  box-shadow: 0 12px 44px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+.dota-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top right, rgba(199, 39, 49, 0.12), transparent 60%),
+    radial-gradient(circle at bottom left, rgba(46, 204, 113, 0.08), transparent 60%);
+  pointer-events: none;
+}
+.dota-panel:hover .dota-card-corner {
+  opacity: 1;
+  border-color: #fdcb6e;
+}
+
+.dota-card-corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border: 2px solid rgba(253,203,110,0.75);
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+}
+.dota-card-corner.tl { top: 10px; left: 10px; border-right: none; border-bottom: none; border-top-left-radius: 6px; }
+.dota-card-corner.tr { top: 10px; right: 10px; border-left: none; border-bottom: none; border-top-right-radius: 6px; }
+.dota-card-corner.bl { bottom: 10px; left: 10px; border-right: none; border-top: none; border-bottom-left-radius: 6px; }
+.dota-card-corner.br { bottom: 10px; right: 10px; border-left: none; border-top: none; border-bottom-right-radius: 6px; }
+
+/* Radiant / Dire / Gold text helpers */
+.radiant-text { color: #2ecc71; text-shadow: 0 0 12px rgba(46,204,113,0.5); }
+.dire-text { color: #ff6b6b; text-shadow: 0 0 12px rgba(255,107,107,0.5); }
+.gold-text {
+  color: #fdcb6e;
+  text-shadow: 0 0 14px rgba(253, 203, 110, 0.45);
+  font-weight: 700;
+}
+
+/* ============ Buttons ============ */
+.btn-dota-primary {
+  font-family: 'Rajdhani', sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: #fff !important;
+  background: linear-gradient(180deg, #d93a3f 0%, #8f1e22 100%) !important;
+  border: 1px solid rgba(253, 203, 110, 0.55) !important;
+  border-radius: 7px !important;
+  box-shadow: 0 5px 18px rgba(199, 39, 49, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
+  transition: all 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+}
+.btn-dota-primary:hover {
+  background: linear-gradient(180deg, #ef494e 0%, #a8262b 100%) !important;
+  box-shadow: 0 8px 26px rgba(199, 39, 49, 0.58) !important;
+  transform: translateY(-2px) scale(1.015);
+  border-color: rgba(253, 203, 110, 0.8) !important;
+}
+.btn-dota-primary:active { transform: translateY(0) scale(0.99); }
+.btn-dota-primary:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.btn-dota-radiant {
+  color: #fff !important;
+  background: linear-gradient(180deg, #27ae60 0%, #147642 100%) !important;
+  border: 1px solid rgba(46, 204, 113, 0.5) !important;
+  box-shadow: 0 5px 18px rgba(46, 204, 113, 0.38), inset 0 1px 0 rgba(255,255,255,0.14) !important;
+  transition: all 0.22s ease !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+}
+.btn-dota-radiant:hover {
+  background: linear-gradient(180deg, #2ecc71 0%, #1a8a52 100%) !important;
+  box-shadow: 0 8px 26px rgba(46, 204, 113, 0.55) !important;
+  transform: translateY(-2px);
+  border-color: rgba(253, 203, 110, 0.5) !important;
+}
+.btn-dota-radiant:disabled {
+  opacity: 0.45 !important;
+  transform: none !important;
+}
+
+/* ============ Medal badge ============ */
+.medal-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px 8px 8px;
+  border-radius: 44px;
+  overflow: hidden;
+  isolation: isolate;
+}
+.medal-badge::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0));
+  z-index: -1;
+}
+.medal-dot {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  z-index: 1;
+}
+.medal-dot::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  filter: blur(10px);
+  opacity: 0.6;
+  z-index: -1;
+}
+.medal-star {
+  position: absolute;
+  right: -2px;
+  top: -6px;
+  font-size: 14px;
+  line-height: 1;
+  text-shadow: 0 0 6px rgba(0,0,0,0.8);
+}
+
+/* ============ Scrollbar ============ */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #07090d; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #3d4a5c, #1e2836);
+  border-radius: 5px;
+  border: 2px solid #07090d;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #c72731, #8f1e22);
+}
+
+::selection {
+  background: rgba(199,39,49,0.45);
+  color: #fff;
+}
+
+/* ============ Animations ============ */
+@keyframes dotaPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(253, 203, 110, 0.55); }
+  50% { box-shadow: 0 0 0 10px rgba(253, 203, 110, 0); }
+}
+.pulse-gold { animation: dotaPulse 2s ease-out infinite; }
+
+@keyframes cardSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.card-slide-up {
+  animation: cardSlideUp 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.fade-in { animation: fadeIn 0.5s ease both; }
+
+/* Swipe card entrance */
+.swipe-card-enter {
+  opacity: 0;
+  transform: translateX(60px) scale(0.96);
+}
+.swipe-card-enter-active {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Match banner shimmer */
+@keyframes matchShimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.match-banner {
+  background: linear-gradient(90deg, rgba(46,204,113,0.15), rgba(253,203,110,0.22), rgba(199,39,49,0.15));
+  background-size: 800px 100%;
+  animation: matchShimmer 2.8s linear infinite;
+}
+
+@keyframes crestSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes brandGlow {
+  0%, 100% { text-shadow: 0 2px 8px rgba(253, 203, 110, 0.2), 0 0 24px rgba(199, 39, 49, 0.15); }
+  50% { text-shadow: 0 2px 12px rgba(253, 203, 110, 0.55), 0 0 42px rgba(199, 39, 49, 0.35); }
+}
+
+@keyframes logoPulseRing {
+  0% { box-shadow: 0 0 0 0 rgba(253, 203, 110, 0.45), inset 0 1px 0 rgba(255,255,255,0.2); }
+  70% { box-shadow: 0 0 0 18px rgba(253, 203, 110, 0), inset 0 1px 0 rgba(255,255,255,0.2); }
+  100% { box-shadow: 0 0 0 0 rgba(253, 203, 110, 0), inset 0 1px 0 rgba(255,255,255,0.2); }
+}
+
+@keyframes borderShimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes bgDrift {
+  0% { background-position: 0% 0%, 100% 100%, 0 0; }
+  50% { background-position: 25% 15%, 75% 85%, 0 0; }
+  100% { background-position: 0% 0%, 100% 100%, 0 0; }
+}
+
+/* Responsive tweaks */
+@media (max-width: 640px) {
+  .dota-nav-btn { font-size: 12px; padding: 6px 10px; }
+  .dota-brand-text { display: none; }
+  .dota-logout-btn { font-size: 11px; padding: 6px 10px; }
+  .dota-logo { width: 110px; height: 110px; }
+  .dota-logo-letter { font-size: 42px; }
+}

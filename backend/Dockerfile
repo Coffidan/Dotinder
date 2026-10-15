@@ -6,7 +6,7 @@ COPY src ./src
 RUN mvn -q -DskipTests package
 
 # Stage 2: runtime JRE
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 COPY --from=build /app/target/backend-0.0.1-SNAPSHOT.jar /app/app.jar
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

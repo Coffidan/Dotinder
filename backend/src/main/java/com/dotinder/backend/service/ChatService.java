@@ -10,6 +10,8 @@ import java.util.List;
 @Service
 public class ChatService {
 
+    public static final String PUBLIC_RECIPIENT = "__PUBLIC__";
+
     @Autowired
     private ChatMessageRepository chatMessageRepository;
 
@@ -20,5 +22,9 @@ public class ChatService {
     public List<ChatMessage> getChatHistory(String user1, String user2) {
         return chatMessageRepository.findBySenderIdAndRecipientIdOrRecipientIdAndSenderIdOrderByTimestampAsc(
                 user1, user2, user1, user2);
+    }
+
+    public List<ChatMessage> getPublicHistory() {
+        return chatMessageRepository.findByRecipientIdOrderByTimestampAsc(PUBLIC_RECIPIENT);
     }
 }

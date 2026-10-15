@@ -28,19 +28,20 @@ public class SwipeService {
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
-    public Players getNextPlayerToSwipe(String steamId, int minMmr, int maxMmr) {
+    public Players getNextPlayerToSwipe(String steamId, int minMmr, int maxMmr, String role, Double minWinrate) {
         List<Players> unswipedPlayers = swipeRepository.findUnswipedPlayers(steamId);
         Players candidate = unswipedPlayers.stream()
-                .filter(p -> p.getMmr() != null && p.getMmr() >= minMmr && p.getMmr() <= maxMmr)
+                .filter(p -> p.getMmr() != null)
+                .filter(p -> p.getMmr() >= minMmr && p.getMmr() <= maxMmr)
+                .filter(p -> role == null || role.isBlank() || role.equals(p.getRole()))
+                .filter(p -> minWinrate == null || (p.getWinrate() != null && p.getWinrate() >= minWinrate))
                 .findFirst()
                 .orElse(null);
 
-        if (candidate == null) {
-            return null;
-        }
+        if (candidate == null) return null;
 
-        // Обновляем статистику, если отсутствует или устарела
-        boolean needsUpdate = candidate.getLastStatsUpdate() == null || playersService.needsStatsUpdate(candidate, 24);
+        boolean needsUpdate = candidate.getLastStatsUpdate() == null
+                || playersService.needsStatsUpdate(candidate, 24);
         if (needsUpdate) {
             try {
                 playersService.updatePlayerStats(candidate.getSteamId());
@@ -48,6 +49,10 @@ public class SwipeService {
             } catch (Exception ignore) {}
         }
         return candidate;
+    }
+
+    public Players getNextPlayerToSwipe(String steamId, int minMmr, int maxMmr) {
+        return getNextPlayerToSwipe(steamId, minMmr, maxMmr, null, null);
     }
 
     public SwipeEntity performSwipe(String swiperSteamId, String swipedSteamId, Boolean liked) {
@@ -63,38 +68,41 @@ public class SwipeService {
         SwipeEntity swipe = new SwipeEntity(swiperSteamId, swipedSteamId, liked);
         swipeRepository.save(swipe);
 
-        // Проверка на матч с логами
         if (liked) {
             logger.debug("Checking for match between {} and {}", swiperSteamId, swipedSteamId);
             if (checkForMatch(swiperSteamId, swipedSteamId)) {
                 logger.info("Match detected between {} and {}", swiperSteamId, swipedSteamId);
                 Map<String, Object> notifForSwiper = Map.of(
                         "type", "MATCH",
-                        "message", "У вас матч с пользователем " + swipedSteamId + "! Проверьте страницу матчей.",
+                        "message", "У вас матч! Проверьте страницу мэтчей.",
                         "partnerId", swipedSteamId
                 );
                 Map<String, Object> notifForSwiped = Map.of(
                         "type", "MATCH",
-                        "message", "У вас матч с пользователем " + swiperSteamId + "! Проверьте страницу матчей.",
+                        "message", "У вас матч! Проверьте страницу мэтчей.",
                         "partnerId", swiperSteamId
                 );
-                messagingTemplate.convertAndSendToUser(swiperSteamId, "/queue/notifications", notifForSwiper);
-                messagingTemplate.convertAndSendToUser(swipedSteamId, "/queue/notifications", notifForSwiped);
-                logger.info("Notifications sent to {} and {}", swiperSteamId, swipedSteamId);
-            } else {
-                logger.debug("No match found for {} and {}", swiperSteamId, swipedSteamId);
+                sendNotification(swiperSteamId, notifForSwiper);
+                sendNotification(swipedSteamId, notifForSwiped);
             }
         }
-
         return swipe;
+    }
+
+    private void sendNotification(String steamId, Map<String, Object> payload) {
+        try {
+            messagingTemplate.convertAndSendToUser(steamId, "/queue/notifications", payload);
+            logger.debug("Notification sent to {}", steamId);
+        } catch (Exception e) {
+            logger.warn("Failed to send WS notification to {}: {}", steamId, e.getMessage());
+        }
     }
 
     public boolean checkForMatch(String steamId1, String steamId2) {
         Optional<SwipeEntity> swipe1 = swipeRepository.findBySwiperSteamIdAndSwipedSteamId(steamId1, steamId2);
         Optional<SwipeEntity> swipe2 = swipeRepository.findBySwiperSteamIdAndSwipedSteamId(steamId2, steamId1);
-        boolean isMatch = swipe1.isPresent() && swipe1.get().getLiked() && swipe2.isPresent() && swipe2.get().getLiked();
-        logger.debug("Match check: swipe1={} (liked={}), swipe2={} (liked={})", swipe1.isPresent(), swipe1.map(SwipeEntity::getLiked).orElse(false), swipe2.isPresent(), swipe2.map(SwipeEntity::getLiked).orElse(false));
-        return isMatch;
+        return swipe1.isPresent() && Boolean.TRUE.equals(swipe1.get().getLiked())
+                && swipe2.isPresent() && Boolean.TRUE.equals(swipe2.get().getLiked());
     }
 
     public List<Players> getMatches(String steamId) {
@@ -108,8 +116,9 @@ public class SwipeService {
                     Players p = playersService.findBySteamId(swipe.getSwipedSteamId());
                     if (p != null && (p.getLastStatsUpdate() == null || playersService.needsStatsUpdate(p, 24))) {
                         try {
-                            playersService.updatePlayerStats(p.getSteamId());
-                            p = playersService.findBySteamId(p.getSteamId());
+                            new Thread(() -> {
+                                try { playersService.updatePlayerStats(p.getSteamId()); } catch (Exception ignore) {}
+                            }).start();
                         } catch (Exception ignore) {}
                     }
                     return p;

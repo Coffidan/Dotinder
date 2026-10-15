@@ -2,17 +2,20 @@ package com.dotinder.backend.controller;
 
 import com.dotinder.backend.model.Players;
 import com.dotinder.backend.service.PlayersService;
+import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/players")
 public class PlayersController {
 
+    private static final Logger logger = LoggerFactory.getLogger(PlayersController.class);
     private final PlayersService service;
 
     public PlayersController(PlayersService service) {
@@ -21,107 +24,124 @@ public class PlayersController {
 
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentPlayer(HttpServletRequest request) {
-        System.out.println("=== GET /api/players/me ===");
-
-        // Проверяем сессию
         String steamId = (String) request.getSession().getAttribute("steamId");
         Boolean authenticated = (Boolean) request.getSession().getAttribute("authenticated");
-        System.out.println("Session steamId: " + steamId);
-        System.out.println("Session authenticated: " + authenticated);
-        System.out.println("Session ID: " + request.getSession().getId());
+
+        logger.debug("GET /api/players/me - sessionId={}, steamId={}, authenticated={}",
+                request.getSession().getId(), steamId, authenticated);
 
         if (steamId == null || !Boolean.TRUE.equals(authenticated)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("{\"error\":\"User not authenticated\", \"sessionId\":\"" + request.getSession().getId() + "\"}");
+                    .body(Map.of("error", "User not authenticated", "sessionId", request.getSession().getId()));
         }
 
         try {
             Players player = service.findBySteamId(steamId);
             if (player == null) {
-                // Создаем пустой профиль и сразу обновляем из OpenDota
                 Players newPlayer = new Players();
                 newPlayer.setSteamId(steamId);
                 service.savePlayer(newPlayer);
                 service.updatePlayerFromOpenDota(steamId);
                 player = service.findBySteamId(steamId);
-            } else {
-                // Если нет свежей статистики, пробуем обновить фоном
-                if (player.getLastStatsUpdate() == null) {
-                    service.updatePlayerFromOpenDota(steamId);
-                    player = service.findBySteamId(steamId);
-                }
+            } else if (service.needsStatsUpdate(player, 6)) {
+                logger.debug("Auto-updating stats for {} in background", steamId);
+                new Thread(() -> {
+                    try { service.updatePlayerFromOpenDota(steamId); } catch (Exception ignore) {}
+                }).start();
             }
             return ResponseEntity.ok(player);
         } catch (Exception e) {
-            System.out.println("Error finding player: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"error\":\"Failed to load player\"}");
+            logger.error("Error in /api/players/me: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to load player"));
         }
     }
 
-    // Запрещаем ручное изменение MMR
     @PutMapping("/update-mmr")
-    public ResponseEntity<String> updateMmr(@RequestParam int mmr, HttpServletRequest request) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("MMR управляется OpenDota и не может изменяться вручную");
-    }
-
-    // Новый эндпоинт: обновление роли
-    @PutMapping("/update-role")
-    public ResponseEntity<String> updateRole(@RequestParam String role, HttpServletRequest request) {
+    public ResponseEntity<?> updateMmr(@RequestParam int mmr, HttpServletRequest request) {
         String steamId = (String) request.getSession().getAttribute("steamId");
         if (steamId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "User not authenticated"));
+        }
+        try {
+            service.updateMmr(steamId, mmr);
+            Players updated = service.findBySteamId(steamId);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/update-role")
+    public ResponseEntity<?> updateRole(@RequestParam String role, HttpServletRequest request) {
+        String steamId = (String) request.getSession().getAttribute("steamId");
+        if (steamId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "User not authenticated"));
         }
         try {
             service.updateRole(steamId, role);
-            return ResponseEntity.ok("Role updated successfully");
+            Players updated = service.findBySteamId(steamId);
+            return ResponseEntity.ok(updated);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
 
-    // Новый эндпоинт: обновление данных из OpenDota
     @PostMapping("/update-opendota")
     public ResponseEntity<?> updateFromOpenDota(HttpServletRequest request) {
         String steamId = (String) request.getSession().getAttribute("steamId");
         if (steamId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "User not authenticated"));
         }
         try {
             service.updatePlayerFromOpenDota(steamId);
             Players updatedPlayer = service.findBySteamId(steamId);
             return ResponseEntity.ok(updatedPlayer);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"error\":\"" + e.getMessage() + "\"}");
+            logger.warn("Error updating from OpenDota for {}: {}", steamId, e.getMessage());
+            Players existing = service.findBySteamId(steamId);
+            if (existing != null) return ResponseEntity.ok(existing);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
 
-    // Новый эндпоинт: получение данных из OpenDota
     @GetMapping("/opendota-data")
     public ResponseEntity<?> getOpenDotaData(HttpServletRequest request) {
         String steamId = (String) request.getSession().getAttribute("steamId");
         if (steamId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "User not authenticated"));
         }
         try {
             Map<String, Object> opendotaData = service.getOpenDotaData(steamId);
             return ResponseEntity.ok(opendotaData);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"error\":\"" + e.getMessage() + "\"}");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
 
-    // Новый эндпоинт: получение матчей из OpenDota
     @GetMapping("/opendota-matches")
     public ResponseEntity<?> getOpenDotaMatches(HttpServletRequest request) {
         String steamId = (String) request.getSession().getAttribute("steamId");
         if (steamId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "User not authenticated"));
         }
         try {
             var matches = service.getPlayerMatches(steamId);
             return ResponseEntity.ok(matches);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"error\":\"" + e.getMessage() + "\"}");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        try {
+            request.getSession().invalidate();
+            logger.info("User logged out, session invalidated");
+            return ResponseEntity.ok(Map.of("success", true, "message", "Logged out"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Logout failed"));
         }
     }
 }

@@ -1,5 +1,7 @@
 package com.dotinder.backend.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
@@ -16,6 +18,8 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+    private static final Logger logger = LoggerFactory.getLogger(WebSocketConfig.class);
+
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
         config.enableSimpleBroker("/topic", "/queue");
@@ -25,7 +29,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws").setAllowedOriginPatterns("*").withSockJS();
+        registry.addEndpoint("/ws")
+                .setAllowedOriginPatterns("*")
+                .addInterceptors(new CustomHandshakeInterceptor())
+                .withSockJS();
+        logger.info("WebSocket endpoint /ws registered with SockJS and handshake interceptor");
     }
 
     @Override
@@ -40,9 +48,19 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
                 StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
                 if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-                    Object steamIdRaw = accessor.getSessionAttributes().get("steamId");
-                    if (steamIdRaw != null) {
-                        accessor.setUser(new StompPrincipal(steamIdRaw.toString()));
+                    Object sessionAttrs = accessor.getSessionAttributes();
+                    if (sessionAttrs != null) {
+                        Object steamIdRaw = accessor.getSessionAttributes().get("steamId");
+                        if (steamIdRaw != null) {
+                            accessor.setUser(new StompPrincipal(steamIdRaw.toString()));
+                            logger.debug("STOMP principal set: {}", steamIdRaw);
+                        } else {
+                            String fallbackLogin = accessor.getFirstNativeHeader("login");
+                            if (fallbackLogin != null && !fallbackLogin.isBlank()) {
+                                accessor.setUser(new StompPrincipal(fallbackLogin));
+                                logger.debug("STOMP principal set from login header: {}", fallbackLogin);
+                            }
+                        }
                     }
                 }
                 return message;

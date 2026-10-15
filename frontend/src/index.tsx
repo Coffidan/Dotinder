@@ -7,17 +7,11 @@ import './index.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(
-    <React.StrictMode>
-        <div className="brand-bar">
-            <div className="brand">
-                <div className="brand-logo">D</div>
-                <span>Dotinder</span>
-            </div>
-        </div>
-        <Router>
-            <ErrorBoundary>
-                <App />
-            </ErrorBoundary>
-        </Router>
-    </React.StrictMode>
+  <React.StrictMode>
+    <Router>
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
+    </Router>
+  </React.StrictMode>
 );

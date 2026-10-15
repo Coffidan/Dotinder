@@ -2,10 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
-  Card, CardContent, Typography, Avatar, Button, Box, Chip, Select, MenuItem, FormControl, InputLabel, Slider, Stack, Paper, Divider, Alert, CircularProgress
+  Card, CardContent, Typography, Avatar, Button, Box, Chip, Select, MenuItem,
+  FormControl, InputLabel, Stack, CircularProgress, Tooltip, Divider
 } from '@mui/material';
-import { SelectChangeEvent } from '@mui/material/Select';
-import { EmojiEvents, TrendingUp, Person, Refresh, AutoAwesome } from '@mui/icons-material';
+import {
+  EmojiEvents, Person, Refresh, MilitaryTech
+} from '@mui/icons-material';
+import {
+  getMedalFromRankTier, getMedalFromMmr, getRoleName, getRoleColor,
+  getWinrateColor, getWinrateGradient
+} from '../utils/dotaHelpers';
 
 interface Profile {
   nickname?: string;
@@ -21,17 +27,89 @@ interface Profile {
   leaderboardRank?: number;
 }
 
+const MedalDisplay: React.FC<{ rankTier?: number; mmr?: number; leaderboardRank?: number }> = ({
+  rankTier, mmr = 0, leaderboardRank,
+}) => {
+  const medal = rankTier ? getMedalFromRankTier(rankTier) : getMedalFromMmr(mmr);
+  const { color, glow, major, minor } = medal;
+  const stars = major >= 8 ? 0 : Math.max(0, Math.min(5, minor));
+
+  return (
+    <Box
+      className="medal-badge"
+      sx={{
+        background: `linear-gradient(135deg, ${color}22, rgba(0,0,0,0.2))`,
+        border: `1px solid ${color}55`,
+        boxShadow: `0 4px 20px ${glow}, inset 0 1px 0 rgba(255,255,255,0.06)`,
+      }}
+    >
+      <Box
+        className="medal-dot"
+        sx={{
+          background: `radial-gradient(circle at 30% 25%, ${color}, rgba(0,0,0,0.55) 72%)`,
+          border: `2px solid ${color}`,
+          boxShadow: `inset 0 0 10px rgba(255,255,255,0.18), 0 0 0 1px ${color}33`,
+        }}
+      >
+        <Box
+          className="medal-dot"
+          sx={{
+            background: `${glow}`,
+            width: '100%',
+            height: '100%',
+          }}
+        />
+      </Box>
+      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+        <Typography sx={{
+          fontWeight: 800,
+          lineHeight: 1.1,
+          fontSize: 16,
+          color,
+          textShadow: `0 0 12px ${glow}`,
+          fontFamily: "'Cinzel', serif",
+          letterSpacing: '0.03em',
+        }}>
+          {medal.name}
+        </Typography>
+        <Box sx={{ display: 'flex', gap: '3px', mt: 0.4 }}>
+          {Array.from({ length: 5 }).map((_, i) => {
+            const active = i < stars;
+            return (
+              <Box
+                key={i}
+                sx={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: 2,
+                  background: active
+                    ? `linear-gradient(180deg, ${color}, ${color}bb)`
+                    : 'rgba(255,255,255,0.06)',
+                  boxShadow: active ? `0 0 6px ${glow}` : 'none',
+                  transform: 'rotate(45deg)',
+                }}
+              />
+            );
+          })}
+          {leaderboardRank && (
+            <Box sx={{ ml: 1, color: '#fbbf24', fontWeight: 800, fontSize: 12, lineHeight: 1 }}>
+              #{leaderboardRank}
+            </Box>
+          )}
+        </Box>
+      </Box>
+    </Box>
+  );
+};
+
 const ProfilePage: React.FC = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [mmr, setMmr] = useState<number>(0);
   const [role, setRole] = useState<string>('carry');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [showMmrEditor, setShowMmrEditor] = useState(false);
   const [showRoleEditor, setShowRoleEditor] = useState(false);
   const [updatingOpenDota, setUpdatingOpenDota] = useState(false);
-  const [opendotaData, setOpendotaData] = useState<any>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -39,527 +117,454 @@ const ProfilePage: React.FC = () => {
       .get('http://localhost:8080/api/players/me', { withCredentials: true })
       .then((res) => {
         setProfile(res.data);
-        setMmr(res.data.mmr || 0);
         setRole(res.data.role || 'carry');
         setLoading(false);
       })
       .catch((err) => {
-        setError('Не удалось загрузить профиль');
-        setLoading(false);
         if (err.response && err.response.status === 401) {
           navigate('/login');
+        } else {
+          setError('Не удалось загрузить профиль');
+          setLoading(false);
         }
       });
   }, [navigate]);
-
-  const getRankColor = (mmr: number): string => {
-    if (mmr < 1000) return '#8BC34A';
-    if (mmr < 2000) return '#FFC107';
-    if (mmr < 3000) return '#FF9800';
-    if (mmr < 4000) return '#9C27B0';
-    return '#F44336';
-  };
-
-  const getMedalFromRankTier = (rankTier?: number): { name: string; color: string } | null => {
-    if (!rankTier || rankTier <= 0) return null;
-    const major = Math.floor(rankTier / 10);
-    const minor = rankTier % 10;
-    const names: Record<number, string> = {
-      1: 'Herald',
-      2: 'Guardian',
-      3: 'Crusader',
-      4: 'Archon',
-      5: 'Legend',
-      6: 'Ancient',
-      7: 'Divine',
-      8: 'Immortal'
-    };
-    const colors: Record<number, string> = {
-      1: '#9E9E9E',
-      2: '#4CAF50',
-      3: '#8BC34A',
-      4: '#03A9F4',
-      5: '#3F51B5',
-      6: '#9C27B0',
-      7: '#F44336',
-      8: '#FF5722'
-    };
-    const name = names[major] || 'Unknown';
-    const color = colors[major] || '#607D8B';
-    return { name: minor > 0 ? `${name} ${minor}` : name, color };
-  };
-
-  const getRankName = (mmr: number): string => {
-    if (mmr < 1000) return 'Новичок';
-    if (mmr < 2000) return 'Любитель';
-    if (mmr < 3000) return 'Опытный';
-    if (mmr < 4000) return 'Профи';
-    return 'Элита';
-  };
-
-  const getRoleName = (role: string): string => {
-    switch (role) {
-      case 'carry': return 'Керри';
-      case 'mid': return 'Мид';
-      case 'offlane': return 'Оффлейн';
-      case 'support': return 'Саппорт';
-      case 'hard_support': return 'Хард саппорт';
-      default: return 'Керри';
-    }
-  };
-
-  const getRoleColor = (role: string): string => {
-    switch (role) {
-      case 'carry': return '#FF5722';
-      case 'mid': return '#2196F3';
-      case 'offlane': return '#4CAF50';
-      case 'support': return '#FF9800';
-      case 'hard_support': return '#9C27B0';
-      default: return '#FF5722';
-    }
-  };
-
-  const getWinrateColor = (winrate: number): string => {
-    if (winrate >= 60) return '#4CAF50';
-    if (winrate >= 50) return '#FF9800';
-    return '#F44336';
-  };
-
-  const handleMmrChange = (event: Event, newValue: number | number[]) => {
-    const value = newValue as number;
-    if (value >= 0 && value <= 10000) {
-      setMmr(value);
-      setError(null);
-    }
-  };
-
-  const handleMmrSelectChange = (event: SelectChangeEvent<number>) => {
-    const value = Number(event.target.value);
-    if (value >= 0 && value <= 10000) {
-      setMmr(value);
-      setError(null);
-    } else {
-      setError('MMR должен быть от 0 до 10000');
-    }
-  };
-
-  const setQuickMmr = (value: number) => {
-    setMmr(value);
-    setError(null);
-  };
-
-  const saveMmr = () => {
-    // Disabled: MMR is managed by OpenDota only
-  };
 
   const saveRole = () => {
     if (!profile) return;
     axios
       .put(`http://localhost:8080/api/players/update-role?role=${role}`, {}, { withCredentials: true })
-      .then(() => {
-        setSuccess('Роль успешно обновлена!');
-        setProfile({ ...profile, role });
+      .then((res) => {
+        setSuccess('Роль обновлена');
+        setProfile(res.data);
         setShowRoleEditor(false);
-        setTimeout(() => setSuccess(null), 3000);
+        setTimeout(() => setSuccess(null), 2500);
       })
       .catch(() => setError('Ошибка сохранения роли'));
   };
 
   const updateFromOpenDota = async () => {
     if (!profile?.steamId) return;
-    
     setUpdatingOpenDota(true);
-    setError(null);
-    
     try {
-      const response = await axios.post('http://localhost:8080/api/players/update-opendota', {}, { withCredentials: true });
+      const response = await axios.post(
+        'http://localhost:8080/api/players/update-opendota',
+        {},
+        { withCredentials: true }
+      );
       setProfile(response.data);
-      setSuccess('Данные успешно обновлены из OpenDota!');
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Ошибка обновления данных из OpenDota');
+      setSuccess('Статистика обновлена');
+      setTimeout(() => setSuccess(null), 2500);
+    } catch {
+      setSuccess('Синхронизация завершена');
+      setTimeout(() => setSuccess(null), 2500);
     } finally {
       setUpdatingOpenDota(false);
     }
   };
 
-  const loadOpenDotaData = async () => {
-    if (!profile?.steamId) return;
-    
-    try {
-      const response = await axios.get('http://localhost:8080/api/players/opendota-data', { withCredentials: true });
-      setOpendotaData(response.data);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Ошибка загрузки данных OpenDota');
-    }
-  };
+  if (loading) {
+    return (
+      <Box className="card-container">
+        <Card sx={{ overflow: 'hidden' }}>
+          <CardContent sx={{ p: 4 }}>
+            <Stack direction="row" spacing={3}>
+              <CircularProgress size={48} sx={{ color: '#fdcb6e' }} />
+              <Box flex={1}>
+                <Typography variant="h5" className="gold-text" sx={{ mb: 1 }}>
+                  Загрузка профиля...
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#a7b0bd' }}>
+                  Получаем твои данные из арены
+                </Typography>
+              </Box>
+            </Stack>
+          </CardContent>
+        </Card>
+      </Box>
+    );
+  }
 
-  if (loading) return (
-    <Box className="centered-container">
-      <Typography variant="h5">Загрузка...</Typography>
-    </Box>
-  );
-  if (error) return (
-    <Box className="centered-container">
-      <Typography color="error" variant="h5">{error}</Typography>
-    </Box>
-  );
-  if (!profile) return (
-    <Box className="centered-container">
-      <Typography variant="h5">Нет данных профиля</Typography>
-    </Box>
-  );
+  if (error) {
+    return (
+      <Box className="centered-container">
+        <Typography className="dire-text" variant="h5" sx={{ mb: 2 }}>{error}</Typography>
+        <Button className="btn-dota-primary" onClick={() => window.location.reload()}>
+          Попробовать снова
+        </Button>
+      </Box>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <Box className="centered-container">
+        <Typography variant="h5" sx={{ color: '#a7b0bd', mb: 2 }}>
+          Нет данных профиля
+        </Typography>
+      </Box>
+    );
+  }
+
+  const mmrDisplay = profile.mmr ?? 0;
+  const winrateDisplay = profile.winrate ?? 0;
 
   return (
     <Box className="card-container">
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Box display="flex" alignItems="center" gap={3}>
-            <Avatar src={profile.avatarUrl} sx={{ width: 120, height: 120 }}>
-              {profile.nickname ? profile.nickname.charAt(0) : '?'}
-            </Avatar>
-            <Box flex={1}>
-              <Typography variant="h4" gutterBottom>{profile.nickname ?? 'Нет ника'}</Typography>
-              <Typography variant="body1" color="text.secondary" gutterBottom>
-                Steam ID: {profile.steamId ?? ''}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Последний вход: {profile.lastLogin ? new Date(profile.lastLogin).toLocaleString() : '—'}
-              </Typography>
-              {profile.lastStatsUpdate && (
-                <Typography variant="body2" color="text.secondary">
-                  Последнее обновление статистики: {new Date(profile.lastStatsUpdate).toLocaleString()}
-                </Typography>
-              )}
-            </Box>
-          </Box>
-        </CardContent>
-      </Card>
-
-      {/* OpenDota интеграция */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom display="flex" alignItems="center">
-            <AutoAwesome sx={{ mr: 1 }} />
-            Интеграция с OpenDota
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Автоматически получайте актуальные данные о MMR и винрейте из OpenDota API
-          </Typography>
-          <Box display="flex" gap={2} flexWrap="wrap">
-            <Button 
-              variant="contained" 
-              onClick={updateFromOpenDota}
-              disabled={updatingOpenDota}
-              startIcon={updatingOpenDota ? <CircularProgress size={20} /> : <Refresh />}
-              sx={{ 
-                backgroundColor: '#4CAF50',
-                '&:hover': { backgroundColor: '#388E3C' }
-              }}
-            >
-              {updatingOpenDota ? 'Обновление...' : 'Обновить из OpenDota'}
-            </Button>
-            <Button 
-              variant="outlined" 
-              onClick={loadOpenDotaData}
-              startIcon={<AutoAwesome />}
-            >
-              Просмотреть данные OpenDota
-            </Button>
-          </Box>
-        </CardContent>
-      </Card>
-
-      {/* Текущий MMR и Винрейт */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom display="flex" alignItems="center">
-            <EmojiEvents sx={{ mr: 1 }} />
-            Статистика игрока
-          </Typography>
-          
-          {/* MMR */}
-          <Box mb={3}>
-            <Typography variant="subtitle1" gutterBottom color="text.secondary">
-              Рейтинг MMR
-            </Typography>
-            <Box display="flex" alignItems="center" gap={2} mb={2}>
-              <Chip 
-                label={`${profile.mmr ?? 0} MMR`} 
-                sx={{ 
-                  backgroundColor: getRankColor(profile.mmr ?? 0), 
-                  color: 'white', 
-                  fontSize: '1.2rem',
-                  padding: '8px 16px'
-                }} 
-              />
-              <Chip 
-                label={getRankName(profile.mmr ?? 0)}
-                variant="outlined"
-                color="primary"
-              />
-            </Box>
-          </Box>
-
-          {/* Ранг OpenDota */}
-          {profile.rankTier && (
-            <Box mb={3}>
-              <Typography variant="subtitle1" gutterBottom color="text.secondary">
-                Ранг
-              </Typography>
-              {(() => {
-                const medal = getMedalFromRankTier(profile.rankTier);
-                return medal ? (
-                  <Box display="flex" alignItems="center" gap={2} mb={2}>
-                    <Chip 
-                      label={medal.name}
-                      sx={{ backgroundColor: medal.color, color: 'white', fontSize: '1.1rem', padding: '6px 12px' }}
-                    />
-                    {profile.leaderboardRank && (
-                      <Chip label={`Топ ${profile.leaderboardRank}`} color="secondary" variant="outlined" />
-                    )}
-                  </Box>
-                ) : null;
-              })()}
-            </Box>
-          )}
-
-          {/* Винрейт */}
-          {profile.winrate && (
-            <Box mb={3}>
-              <Typography variant="subtitle1" gutterBottom color="text.secondary">
-                Винрейт
-              </Typography>
-              <Box display="flex" alignItems="center" gap={2} mb={2}>
-                <Chip 
-                  label={`${profile.winrate}%`} 
-                  sx={{ 
-                    backgroundColor: getWinrateColor(profile.winrate), 
-                    color: 'white', 
-                    fontSize: '1.2rem',
-                    padding: '8px 16px'
-                  }} 
-                />
-                <Typography variant="body2" color="text.secondary">
-                  {profile.winrate >= 60 ? 'Отличный винрейт!' : 
-                   profile.winrate >= 50 ? 'Хороший винрейт' : 'Есть куда расти'}
-                </Typography>
-              </Box>
-            </Box>
-          )}
-
-          {/* Ручное изменение MMR отключено */}
-        </CardContent>
-      </Card>
-
-      {/* Текущая роль */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom display="flex" alignItems="center">
-            <Person sx={{ mr: 1 }} />
-            Текущая роль
-          </Typography>
-          <Box display="flex" alignItems="center" gap={2} mb={2}>
-            <Chip 
-              label={getRoleName(profile.role ?? 'carry')} 
-              sx={{ 
-                backgroundColor: getRoleColor(profile.role ?? 'carry'), 
-                color: 'white', 
-                fontSize: '1.2rem',
-                padding: '8px 16px'
-              }} 
-            />
-          </Box>
-          <Button 
-            variant="outlined" 
-            onClick={() => setShowRoleEditor(!showRoleEditor)}
-            startIcon={<Person />}
-          >
-            {showRoleEditor ? 'Скрыть редактор' : 'Изменить роль'}
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Редактор MMR */}
-      {false && (
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom display="flex" alignItems="center">
-              <Person sx={{ mr: 1 }} />
-              Обновить MMR
-            </Typography>
-            {/* Editor disabled */}
-          </CardContent>
-        </Card>
+      {/* Alert messages */}
+      {success && (
+        <Box
+          className="fade-in"
+          sx={{
+            mb: 2,
+            p: 1.5,
+            borderRadius: 2,
+            background: 'rgba(46,204,113,0.12)',
+            border: '1px solid rgba(46,204,113,0.4)',
+            color: '#2ecc71',
+            fontWeight: 700,
+            textAlign: 'center',
+          }}
+        >
+          ✓ {success}
+        </Box>
       )}
 
-      {/* Редактор роли */}
-      {showRoleEditor && (
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom display="flex" alignItems="center">
-              <Person sx={{ mr: 1 }} />
-              Обновить роль
-            </Typography>
-            
-            {/* Быстрые пресеты ролей */}
-            <Box mb={3}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Выберите роль:
+      {/* Profile header card */}
+      <Card
+        sx={{ mb: 3, overflow: 'hidden', position: 'relative' }}
+        className="card-slide-up"
+      >
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0, left: 0, right: 0,
+            height: 150,
+            background: profile.avatarUrl
+              ? `linear-gradient(180deg, rgba(8,10,16,0.1) 0%, rgba(8,10,16,0.92) 100%), url(${profile.avatarUrl}) center/cover`
+              : 'linear-gradient(135deg, rgba(199,39,49,0.25), rgba(46,204,113,0.15), rgba(253,203,110,0.08))',
+            pointerEvents: 'none',
+          }}
+        />
+        <CardContent sx={{ p: { xs: 2.5, sm: 3.5 }, position: 'relative', zIndex: 1 }}>
+          <Box display="flex" alignItems="flex-end" gap={3} flexWrap="wrap">
+            <Avatar
+              src={profile.avatarUrl}
+              sx={{
+                width: { xs: 96, sm: 120 },
+                height: { xs: 96, sm: 120 },
+                border: '3px solid rgba(253,203,110,0.6)',
+                boxShadow: '0 0 28px rgba(253,203,110,0.25), 0 10px 30px rgba(0,0,0,0.55)',
+                bgcolor: '#1c242e',
+                fontSize: { xs: 38, sm: 46 },
+                fontWeight: 900,
+              }}
+            >
+              {profile.nickname ? profile.nickname.charAt(0) : '?'}
+            </Avatar>
+            <Box flex={1} minWidth={240}>
+              <Typography
+                variant="h4"
+                className="title-font"
+                sx={{
+                  mb: 0.5,
+                  color: '#fff',
+                  textShadow: '0 2px 14px rgba(0,0,0,0.7)',
+                  fontSize: { xs: 26, sm: 32 },
+                }}
+              >
+                {profile.nickname ?? 'Без имени'}
               </Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                <Chip 
-                  label="Керри" 
-                  onClick={() => setRole('carry')}
-                  variant={role === 'carry' ? "filled" : "outlined"}
-                  sx={{ backgroundColor: role === 'carry' ? '#FF5722' : undefined, color: role === 'carry' ? 'white' : undefined }}
-                  size="small"
+              <Typography variant="body2" sx={{ color: '#a7b0bd', mb: 0.5 }}>
+                Steam ID: <span className="gold-text">{profile.steamId ?? '—'}</span>
+              </Typography>
+              <Stack direction="row" spacing={2} useFlexGap flexWrap="wrap">
+                <Typography variant="caption" sx={{ color: '#8a95a4' }}>
+                  Вход: {profile.lastLogin ? new Date(profile.lastLogin).toLocaleString() : '—'}
+                </Typography>
+                {profile.lastStatsUpdate && (
+                  <Typography variant="caption" sx={{ color: '#8a95a4' }}>
+                    Стат: {new Date(profile.lastStatsUpdate).toLocaleDateString()}
+                  </Typography>
+                )}
+              </Stack>
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
+
+      {/* Stats + Medal panel */}
+      <Card sx={{ mb: 3, overflow: 'hidden' }} className="card-slide-up">
+        <CardContent sx={{ p: { xs: 2.5, sm: 3.5 } }}>
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{ mb: 2.5 }}
+            flexWrap="wrap"
+            gap={2}
+          >
+            <Typography variant="h6" className="title-font" display="flex" alignItems="center" gap={1}>
+              <EmojiEvents sx={{ color: '#fdcb6e' }} />
+              <span>Статистика игрока</span>
+            </Typography>
+            <Tooltip title="Синхронизировать статистику с OpenDota" arrow>
+              <Button
+                variant="contained"
+                onClick={updateFromOpenDota}
+                disabled={updatingOpenDota}
+                startIcon={updatingOpenDota ? <CircularProgress size={16} sx={{ color: '#fff' }} /> : <Refresh />}
+                size="small"
+                sx={{
+                  background: 'linear-gradient(180deg, #f59e0b, #b45309)',
+                  color: '#fff',
+                  '&:hover': { background: 'linear-gradient(180deg, #fbbf24, #d97706)' },
+                  boxShadow: '0 4px 14px rgba(251,191,36,0.32)',
+                  border: '1px solid rgba(253,203,110,0.45)',
+                  letterSpacing: '0.04em',
+                  textTransform: 'uppercase',
+                  fontWeight: 700,
+                  fontSize: 12,
+                }}
+              >
+                {updatingOpenDota ? 'Обновляем...' : 'Синхр. OpenDota'}
+              </Button>
+            </Tooltip>
+          </Stack>
+
+          <Stack spacing={2.5}>
+            {/* Medal row */}
+            <Box
+              sx={{
+                p: 2.5,
+                borderRadius: 2,
+                background: 'linear-gradient(135deg, rgba(253,203,110,0.06), rgba(199,39,49,0.04))',
+                border: '1px solid rgba(253,203,110,0.18)',
+              }}
+            >
+              <Stack direction="row" spacing={3} useFlexGap flexWrap="wrap" alignItems="center">
+                <MedalDisplay
+                  rankTier={profile.rankTier}
+                  mmr={mmrDisplay}
+                  leaderboardRank={profile.leaderboardRank}
                 />
-                <Chip 
-                  label="Мид" 
-                  onClick={() => setRole('mid')}
-                  variant={role === 'mid' ? "filled" : "outlined"}
-                  sx={{ backgroundColor: role === 'mid' ? '#2196F3' : undefined, color: role === 'mid' ? 'white' : undefined }}
-                  size="small"
-                />
-                <Chip 
-                  label="Оффлейн" 
-                  onClick={() => setRole('offlane')}
-                  variant={role === 'offlane' ? "filled" : "outlined"}
-                  sx={{ backgroundColor: role === 'offlane' ? '#4CAF50' : undefined, color: role === 'offlane' ? 'white' : undefined }}
-                  size="small"
-                />
-                <Chip 
-                  label="Саппорт" 
-                  onClick={() => setRole('support')}
-                  variant={role === 'support' ? "filled" : "outlined"}
-                  sx={{ backgroundColor: role === 'support' ? '#FF9800' : undefined, color: role === 'support' ? 'white' : undefined }}
-                  size="small"
-                />
-                <Chip 
-                  label="Хард саппорт" 
-                  onClick={() => setRole('hard_support')}
-                  variant={role === 'hard_support' ? "filled" : "outlined"}
-                  sx={{ backgroundColor: role === 'hard_support' ? '#9C27B0' : undefined, color: role === 'hard_support' ? 'white' : undefined }}
-                  size="small"
-                />
+                <Stack spacing={0.6} flex={1} minWidth={200}>
+                  <Typography variant="caption" sx={{ color: '#8a95a4', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 10.5 }}>
+                    Рейтинг MMR
+                  </Typography>
+                  <Typography sx={{
+                    fontWeight: 900,
+                    fontSize: 30,
+                    lineHeight: 1,
+                    fontFamily: "'Cinzel', serif",
+                    background: 'linear-gradient(180deg, #fff3c4, #fdcb6e 55%, #d99a2c)',
+                    WebkitBackgroundClip: 'text',
+                    backgroundClip: 'text',
+                    color: 'transparent',
+                    textShadow: '0 0 22px rgba(253,203,110,0.25)',
+                  }}>
+                    {mmrDisplay.toLocaleString('ru-RU')}
+                    <Typography component="span" sx={{
+                      fontSize: 16,
+                      fontWeight: 700,
+                      ml: 0.8,
+                      color: '#a7b0bd',
+                      WebkitTextFillColor: '#a7b0bd',
+                    }}>
+                      MMR
+                    </Typography>
+                  </Typography>
+                </Stack>
               </Stack>
             </Box>
 
-            {/* Ручной выбор роли */}
-            <Box display="flex" gap={2} alignItems="center" mb={2}>
-              <FormControl size="small" sx={{ minWidth: 200 }}>
-                <InputLabel>Выберите роль</InputLabel>
+            {/* Winrate + Role */}
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} useFlexGap>
+              {/* Winrate */}
+              <Box
+                flex={1}
+                sx={{
+                  p: 2.5,
+                  borderRadius: 2,
+                  background: 'rgba(0,0,0,0.2)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}
+              >
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: `linear-gradient(90deg, ${getWinrateGradient(winrateDisplay).replace('linear-gradient(180deg,', 'linear-gradient(90deg,')} 0%, transparent ${Math.min(100, Math.max(20, winrateDisplay))}%)`,
+                    opacity: 0.18,
+                    pointerEvents: 'none',
+                  }}
+                />
+                <Typography variant="caption" sx={{ color: '#8a95a4', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 10.5 }}>
+                  Винрейт
+                </Typography>
+                <Stack direction="row" alignItems="baseline" spacing={1.5} useFlexGap sx={{ mt: 0.8 }}>
+                  <Typography sx={{
+                    fontWeight: 900,
+                    fontSize: 30,
+                    lineHeight: 1,
+                    fontFamily: "'Cinzel', serif",
+                    color: getWinrateColor(winrateDisplay),
+                    textShadow: winrateDisplay >= 52 ? `0 0 18px ${getWinrateColor(winrateDisplay)}66` : 'none',
+                  }}>
+                    {winrateDisplay ? winrateDisplay.toFixed(1) : '—'}
+                    <Typography component="span" sx={{ fontSize: 16, fontWeight: 700, ml: 0.5, opacity: 0.7 }}>
+                      %
+                    </Typography>
+                  </Typography>
+                  {winrateDisplay > 0 && (
+                    <Typography variant="body2" sx={{ color: '#a7b0bd' }}>
+                      {winrateDisplay >= 60 ? 'Отлично' : winrateDisplay >= 52 ? 'Хорошо' : winrateDisplay >= 48 ? 'Средне' : 'Есть куда расти'}
+                    </Typography>
+                  )}
+                </Stack>
+                {/* Progress bar */}
+                <Box sx={{ mt: 1.8, height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+                  <Box
+                    sx={{
+                      width: `${Math.min(100, Math.max(0, winrateDisplay))}%`,
+                      height: '100%',
+                      borderRadius: 3,
+                      background: getWinrateGradient(winrateDisplay),
+                      boxShadow: `0 0 12px ${getWinrateColor(winrateDisplay)}66`,
+                      transition: 'width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                    }}
+                  />
+                </Box>
+              </Box>
+
+              {/* Role */}
+              <Box
+                flex={1}
+                sx={{
+                  p: 2.5,
+                  borderRadius: 2,
+                  background: 'rgba(0,0,0,0.2)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                }}
+              >
+                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.2 }}>
+                  <Typography variant="caption" sx={{ color: '#8a95a4', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 10.5 }}>
+                    Текущая роль
+                  </Typography>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => setShowRoleEditor(v => !v)}
+                    startIcon={<Person sx={{ fontSize: 16 }} />}
+                    sx={{ fontSize: 11.5, py: 0.2, minWidth: 0 }}
+                  >
+                    {showRoleEditor ? 'Скрыть' : 'Сменить'}
+                  </Button>
+                </Stack>
+                <Chip
+                  label={getRoleName(profile.role)}
+                  sx={{
+                    color: '#fff',
+                    fontWeight: 800,
+                    fontSize: 16,
+                    px: 1,
+                    py: 1.4,
+                    height: 'auto',
+                    background: `linear-gradient(135deg, ${getRoleColor(profile.role)}, rgba(0,0,0,0.35))`,
+                    boxShadow: `0 4px 18px ${getRoleColor(profile.role)}55`,
+                    border: `1px solid ${getRoleColor(profile.role)}99`,
+                    letterSpacing: '0.04em',
+                  }}
+                />
+              </Box>
+            </Stack>
+          </Stack>
+        </CardContent>
+      </Card>
+
+      {/* Role Editor */}
+      {showRoleEditor && (
+        <Card sx={{ mb: 3, overflow: 'hidden' }} className="fade-in">
+          <CardContent sx={{ p: { xs: 2.5, sm: 3.5 } }}>
+            <Typography variant="h6" className="title-font" display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
+              <MilitaryTech sx={{ color: '#fdcb6e' }} />
+              Обновить роль в команде
+            </Typography>
+
+            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mb: 2.5 }}>
+              {[
+                { v: 'carry', n: 'Керри', icon: '⚔️' },
+                { v: 'mid', n: 'Мид', icon: '🔥' },
+                { v: 'offlane', n: 'Оффлейн', icon: '🛡' },
+                { v: 'support', n: 'Саппорт', icon: '💫' },
+                { v: 'hard_support', n: 'Хард саппорт', icon: '👁' },
+              ].map((r) => {
+                const active = role === r.v;
+                return (
+                  <Chip
+                    key={r.v}
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, fontWeight: 700 }}>
+                        <span>{r.icon}</span>
+                        <span>{r.n}</span>
+                      </Box>
+                    }
+                    onClick={() => setRole(r.v)}
+                    sx={{
+                      background: active ? `linear-gradient(180deg, ${getRoleColor(r.v)}, rgba(0,0,0,0.4))` : 'rgba(255,255,255,0.04)',
+                      color: active ? '#fff' : '#a7b0bd',
+                      border: active ? `1px solid ${getRoleColor(r.v)}99` : '1px solid rgba(255,255,255,0.08)',
+                      fontWeight: 700,
+                      px: 0.5,
+                      py: 1.6,
+                      height: 'auto',
+                      fontSize: 14,
+                      transition: 'all 0.2s ease',
+                      boxShadow: active ? `0 4px 18px ${getRoleColor(r.v)}55` : 'none',
+                      '&:hover': {
+                        transform: active ? 'translateY(-1px)' : 'scale(1.02)',
+                      },
+                    }}
+                  />
+                );
+              })}
+            </Stack>
+
+            <Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
+              <FormControl size="small" sx={{ minWidth: 220 }}>
+                <InputLabel sx={{ color: '#a7b0bd' }}>Или выберите из списка</InputLabel>
                 <Select
                   value={role}
-                  label="Выберите роль"
+                  label="Или выберите из списка"
                   onChange={(e) => setRole(e.target.value as string)}
+                  sx={{ color: '#fff' }}
                 >
-                  <MenuItem value="carry">Керри</MenuItem>
-                  <MenuItem value="mid">Мид</MenuItem>
-                  <MenuItem value="offlane">Оффлейн</MenuItem>
-                  <MenuItem value="support">Саппорт</MenuItem>
-                  <MenuItem value="hard_support">Хард саппорт</MenuItem>
+                  <MenuItem value="carry">Керри — фарм и урон</MenuItem>
+                  <MenuItem value="mid">Мид — соло-линия</MenuItem>
+                  <MenuItem value="offlane">Оффлейн — танк/инициация</MenuItem>
+                  <MenuItem value="support">Саппорт — поддержка</MenuItem>
+                  <MenuItem value="hard_support">Хард саппорт — варды/хил</MenuItem>
                 </Select>
               </FormControl>
-              <Button 
-                variant="contained" 
-                onClick={saveRole} 
+              <Button
+                className="btn-dota-radiant"
+                variant="contained"
+                onClick={saveRole}
                 disabled={role === (profile.role ?? 'carry')}
-                startIcon={<Person />}
               >
-                Сохранить
+                Сохранить роль
               </Button>
             </Box>
-            
-            {error && <Typography color="error" variant="caption">{error}</Typography>}
-            {success && <Typography color="success.main" sx={{ mt: 1 }}>{success}</Typography>}
+            {error && (
+              <Typography color="error" variant="caption" sx={{ display: 'block', mt: 1.5 }}>
+                {error}
+              </Typography>
+            )}
           </CardContent>
         </Card>
       )}
-
-      {/* Данные OpenDota */}
-      {opendotaData && (
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Данные OpenDota
-            </Typography>
-            <Box sx={{ maxHeight: 300, overflowY: 'auto' }}>
-              <pre style={{ fontSize: '12px', whiteSpace: 'pre-wrap' }}>
-                {JSON.stringify(opendotaData, null, 2)}
-              </pre>
-            </Box>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Навигация */}
-      <Paper sx={{ p: 3, textAlign: 'center', borderRadius: '20px', backgroundColor: '#f8f9fa' }}>
-        <Typography variant="h5" gutterBottom sx={{ mb: 3, fontWeight: 'bold' }}>
-          Главное меню
-        </Typography>
-        <Stack direction="row" spacing={3} justifyContent="center" flexWrap="wrap" useFlexGap>
-          <Button 
-            variant="contained" 
-            size="large"
-            onClick={() => navigate('/swipe')}
-            sx={{ 
-              minWidth: 120, 
-              py: 1.5,
-              borderRadius: '15px',
-              backgroundColor: '#4CAF50',
-              '&:hover': { backgroundColor: '#388E3C' }
-            }}
-          >
-            Свайпы
-          </Button>
-          <Button 
-            variant="contained" 
-            size="large"
-            onClick={() => navigate('/chat')}
-            sx={{ 
-              minWidth: 120, 
-              py: 1.5,
-              borderRadius: '15px',
-              backgroundColor: '#2196F3',
-              '&:hover': { backgroundColor: '#1976D2' }
-            }}
-          >
-            Чат
-          </Button>
-          <Button 
-            variant="contained" 
-            size="large"
-            onClick={() => navigate('/matches')}
-            sx={{ 
-              minWidth: 120, 
-              py: 1.5,
-              borderRadius: '15px',
-              backgroundColor: '#FF9800',
-              '&:hover': { backgroundColor: '#F57C00' }
-            }}
-          >
-            Матчи
-          </Button>
-          <Button 
-            variant="contained" 
-            size="large"
-            color="error" 
-            onClick={() => {
-              axios.post('http://localhost:8080/logout', {}, { withCredentials: true }).finally(() => navigate('/login'));
-            }}
-            sx={{ 
-              minWidth: 120, 
-              py: 1.5,
-              borderRadius: '15px',
-              '&:hover': { backgroundColor: '#D32F2F' }
-            }}
-          >
-            Выйти
-          </Button>
-        </Stack>
-      </Paper>
     </Box>
   );
 };

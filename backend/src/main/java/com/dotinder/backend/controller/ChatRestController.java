@@ -8,7 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -24,5 +23,10 @@ public class ChatRestController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
         }
         return chatService.getChatHistory(steamId, partnerId);
+    }
+
+    @GetMapping("/api/chat/public-history")
+    public List<ChatMessage> getPublicHistory() {
+        return chatService.getPublicHistory();
     }
 }
