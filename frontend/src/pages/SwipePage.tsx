@@ -147,7 +147,7 @@ const SwipePage: React.FC = () => {
         if (cancelled) return;
         setProfile({ steamId: res.data.steamId, nickname: res.data.nickname });
 
-        const socket = new SockJS(WS_URL, undefined, { withCredentials: true });
+        const socket = new SockJS(WS_URL);
         const client = new Client({
           webSocketFactory: () => socket,
           reconnectDelay: 5000,

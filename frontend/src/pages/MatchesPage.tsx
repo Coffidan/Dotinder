@@ -132,7 +132,7 @@ const MatchesPage: React.FC = () => {
         setMatches(response.data || []);
         setError(null);
 
-        const socket = new SockJS(WS_URL, undefined, { withCredentials: true });
+        const socket = new SockJS(WS_URL);
         const client = new Client({
           webSocketFactory: () => socket,
           connectHeaders: { login: me.steamId },

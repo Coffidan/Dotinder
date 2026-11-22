@@ -54,7 +54,7 @@ const ChatPage: React.FC = () => {
         } catch (ignore) {}
         if (!cancelled) setMessages(history);
 
-        const socket = new SockJS(WS_URL, undefined, { withCredentials: true });
+        const socket = new SockJS(WS_URL);
         const client = new Client({
           webSocketFactory: () => socket,
           reconnectDelay: 5000,
