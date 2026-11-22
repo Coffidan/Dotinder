@@ -19,7 +19,10 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                // CSRF пока отключён: защита вне рамок текущей задачи для SPA с сессионными cookie.
                 .csrf(csrf -> csrf.disable())
+                // Защита от фиксации сессии: создаём новую сессию при логине.
+                .sessionManagement(session -> session.sessionFixation().migrateSession())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/ws/**").permitAll()  // Разрешаем WebSocket
                         .anyRequest().permitAll()

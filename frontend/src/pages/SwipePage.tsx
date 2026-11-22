@@ -13,8 +13,8 @@ import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import { useNavigate } from 'react-router-dom';
 import {
-  getMedalFromRankTier, getMedalFromMmr, getRoleName, getRoleColor,
-  getWinrateColor, getWinrateGradient, MEDAL_COLORS, MEDAL_GLOW, API_BASE, WS_URL
+  getMedalFromRankTier, getMedalFromMmr, getRoleName,
+  getWinrateColor, getWinrateGradient, API_BASE, WS_URL
 } from '../utils/dotaHelpers';
 
 interface Player {
@@ -45,9 +45,9 @@ const MedalDisplay: React.FC<{ rankTier?: number; mmr?: number; leaderboardRank?
     <Box
       className="medal-badge"
       sx={{
-        background: `linear-gradient(135deg, ${color}22, rgba(0,0,0,0.2))`,
+        background: 'rgba(255,255,255,0.03)',
         border: `1px solid ${color}55`,
-        boxShadow: `0 4px 20px ${glow}, inset 0 1px 0 rgba(255,255,255,0.06)`,
+        boxShadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
       }}
     >
       <Box
@@ -67,7 +67,7 @@ const MedalDisplay: React.FC<{ rankTier?: number; mmr?: number; leaderboardRank?
             height: '100%',
             borderRadius: '50%',
             filter: 'blur(6px)',
-            opacity: 0.6,
+            opacity: 0.45,
             position: 'absolute',
             inset: -4,
           }}
@@ -79,7 +79,7 @@ const MedalDisplay: React.FC<{ rankTier?: number; mmr?: number; leaderboardRank?
           lineHeight: 1.1,
           fontSize: size === 'sm' ? 12.5 : size === 'lg' ? 18 : 15,
           color,
-          textShadow: `0 0 12px ${glow}`,
+          textShadow: 'none',
           fontFamily: "'Cinzel', serif",
           letterSpacing: '0.03em',
         }}>
@@ -95,17 +95,15 @@ const MedalDisplay: React.FC<{ rankTier?: number; mmr?: number; leaderboardRank?
                   width: size === 'sm' ? 5 : 7,
                   height: size === 'sm' ? 5 : 7,
                   borderRadius: 2,
-                  background: active
-                    ? `linear-gradient(180deg, ${color}, ${color}bb)`
-                    : 'rgba(255,255,255,0.06)',
-                  boxShadow: active ? `0 0 6px ${glow}` : 'none',
+                  background: active ? color : 'rgba(255,255,255,0.06)',
+                  boxShadow: 'none',
                   transform: 'rotate(45deg)',
                 }}
               />
             );
           })}
           {leaderboardRank && (
-            <Box sx={{ ml: 1, color: '#fbbf24', fontWeight: 800, fontSize: size === 'sm' ? 10 : 12, lineHeight: 1 }}>
+            <Box sx={{ ml: 1, color: 'var(--accent)', fontWeight: 800, fontSize: size === 'sm' ? 10 : 12, lineHeight: 1 }}>
               #{leaderboardRank}
             </Box>
           )}
@@ -149,7 +147,7 @@ const SwipePage: React.FC = () => {
         if (cancelled) return;
         setProfile({ steamId: res.data.steamId, nickname: res.data.nickname });
 
-        const socket = new SockJS(WS_URL);
+        const socket = new SockJS(WS_URL, undefined, { withCredentials: true });
         const client = new Client({
           webSocketFactory: () => socket,
           reconnectDelay: 5000,
@@ -235,8 +233,8 @@ const SwipePage: React.FC = () => {
 
   if (loading) return (
     <Box className="centered-container">
-      <Typography variant="h4" className="gold-text" sx={{ mb: 2 }}>⚔ Поиск тиммейтов...</Typography>
-      <Typography variant="body1" sx={{ color: '#a7b0bd' }}>Скоро на арене появятся герои</Typography>
+      <Typography variant="h4" sx={{ mb: 2, color: 'var(--text)' }}>Поиск тиммейтов...</Typography>
+      <Typography variant="body1" sx={{ color: 'var(--text-dim)' }}>Скоро на арене появятся герои</Typography>
     </Box>
   );
   if (error) return (
@@ -247,8 +245,8 @@ const SwipePage: React.FC = () => {
   );
   if (!currentPlayer) return (
     <Box className="centered-container">
-      <Typography variant="h3" className="gold-text" sx={{ mb: 2 }}>✦ ИГРОКИ ЗАКОНЧИЛИСЬ ✦</Typography>
-      <Typography variant="body1" sx={{ color: '#a7b0bd', mb: 4, maxWidth: 440 }}>
+      <Typography variant="h3" className="title-font" sx={{ mb: 2, color: 'var(--text)' }}>Игроки закончились</Typography>
+      <Typography variant="body1" sx={{ color: 'var(--text-dim)', mb: 4, maxWidth: 440 }}>
         Вы просмотрели всех доступных героев в выбранных фильтрах. Попробуйте расширить диапазон MMR,
         снять фильтр по роли или загляните позже — пул постоянно обновляется.
       </Typography>
@@ -271,7 +269,7 @@ const SwipePage: React.FC = () => {
         <Chip
           label={profile ? `Вы: ${profile.nickname}` : 'Загрузка...'}
           size="small"
-          sx={{ background: 'rgba(46,204,113,0.1)', color: '#55efc4', border: '1px solid rgba(46,204,113,0.3)', fontWeight: 700 }}
+          sx={{ background: 'var(--accent-soft)', color: 'var(--accent)', border: '1px solid var(--accent-border)', fontWeight: 700 }}
         />
       </Box>
 
@@ -281,16 +279,18 @@ const SwipePage: React.FC = () => {
             severity="success"
             icon={<EmojiEvents />}
             sx={{
-              border: '1px solid rgba(253,203,110,0.5)',
-              background: 'linear-gradient(90deg, rgba(46,204,113,0.18), rgba(253,203,110,0.15), rgba(231,76,60,0.18))',
-              boxShadow: '0 0 24px rgba(253,203,110,0.25)',
+              border: '1px solid var(--accent-border)',
+              background: 'var(--accent-soft)',
+              color: 'var(--text)',
+              boxShadow: 'none',
+              '& .MuiAlert-icon': { color: 'var(--accent)' },
               '& .MuiAlert-message': { width: '100%' },
             }}
           >
-            <Typography variant="h5" className="title-font" sx={{ color: '#fdcb6e', textAlign: 'center' }}>
-              ⚔ ЭТО МЭТЧ! ⚔
+            <Typography variant="h5" className="title-font" sx={{ color: 'var(--accent)', textAlign: 'center' }}>
+              Это мэтч!
             </Typography>
-            <Typography variant="body2" sx={{ textAlign: 'center', mt: 0.5 }}>
+            <Typography variant="body2" sx={{ textAlign: 'center', mt: 0.5, color: 'var(--text-dim)' }}>
               Вы и <b>{currentPlayer.nickname}</b> лайкнули друг друга — время общаться!
             </Typography>
             <Box sx={{ mt: 1.5, display: 'flex', justifyContent: 'center', gap: 1.5 }}>
@@ -305,7 +305,13 @@ const SwipePage: React.FC = () => {
       <Snackbar open={!!notification} autoHideDuration={6000} onClose={() => setNotification(null)}>
         <Alert
           severity="success"
-          sx={{ width: '100%', border: '1px solid rgba(46,204,113,0.4)' }}
+          sx={{
+            width: '100%',
+            border: '1px solid var(--accent-border)',
+            background: 'var(--accent-soft)',
+            color: 'var(--text)',
+            '& .MuiAlert-icon': { color: 'var(--accent)' },
+          }}
           action={
             <Button color="inherit" size="small" onClick={() => {
               setNotification(null); navigate('/matches');
@@ -320,13 +326,9 @@ const SwipePage: React.FC = () => {
 
       {/* Фильтр панель */}
       <Box className="dota-panel" sx={{ mb: 3, p: 2.5, position: 'relative' }}>
-        <span className="dota-card-corner tl" />
-        <span className="dota-card-corner tr" />
-        <span className="dota-card-corner bl" />
-        <span className="dota-card-corner br" />
         <Box display="flex" alignItems="center" justifyContent="space-between" mb={showFilter ? 2.5 : 0} flexWrap="wrap" gap={1}>
-          <Typography variant="h6" className="title-font" display="flex" alignItems="center" sx={{ color: '#fdcb6e' }}>
-            <FilterList sx={{ mr: 1 }} />
+          <Typography variant="h6" className="title-font" display="flex" alignItems="center" sx={{ color: 'var(--text)' }}>
+            <FilterList sx={{ mr: 1, color: 'var(--accent)' }} />
             Фильтры поиска
           </Typography>
           <Button variant="outlined" onClick={() => setShowFilter(!showFilter)} size="small">
@@ -338,8 +340,8 @@ const SwipePage: React.FC = () => {
           <Stack spacing={2.5}>
             {/* Роли */}
             <Box>
-              <Typography variant="caption" sx={{ color: '#8a95a4', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 10.5, mb: 1, display: 'block' }}>
-                <MilitaryTech sx={{ fontSize: 13, mr: 0.6, verticalAlign: 'middle', color: '#c72731' }} />
+              <Typography variant="caption" sx={{ color: 'var(--text-mute)', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 10.5, mb: 1, display: 'block' }}>
+                <MilitaryTech sx={{ fontSize: 13, mr: 0.6, verticalAlign: 'middle', color: 'var(--accent)' }} />
                 Фильтр по роли
               </Typography>
               <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
@@ -356,22 +358,15 @@ const SwipePage: React.FC = () => {
                       }
                       onClick={() => setRoleFilter(r.v)}
                       sx={{
-                        background: active
-                          ? r.v
-                            ? `linear-gradient(180deg, ${getRoleColor(r.v)}, rgba(0,0,0,0.4))`
-                            : 'linear-gradient(180deg, rgba(253,203,110,0.35), rgba(0,0,0,0.3))'
-                          : 'rgba(255,255,255,0.04)',
-                        color: active ? '#fff' : '#a7b0bd',
-                        border: active
-                          ? `1px solid ${r.v ? getRoleColor(r.v) + '99' : 'rgba(253,203,110,0.6)'}`
-                          : '1px solid rgba(255,255,255,0.08)',
+                        background: active ? 'var(--accent-soft)' : 'rgba(255,255,255,0.04)',
+                        color: active ? 'var(--text)' : 'var(--text-dim)',
+                        border: active ? '1px solid var(--accent-border)' : '1px solid var(--border)',
                         fontWeight: 700,
                         px: 0.5,
                         py: 1.3,
                         height: 'auto',
                         fontSize: 13,
                         transition: 'all 0.2s ease',
-                        boxShadow: active ? `0 4px 18px ${r.v ? getRoleColor(r.v) + '55' : 'rgba(253,203,110,0.3)'}` : 'none',
                       }}
                     />
                   );
@@ -382,18 +377,18 @@ const SwipePage: React.FC = () => {
             {/* Мин винрейт */}
             <Box>
               <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.8}>
-                <Typography variant="caption" sx={{ color: '#8a95a4', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 10.5 }}>
-                  <TrackChanges sx={{ fontSize: 13, mr: 0.6, verticalAlign: 'middle', color: '#2ecc71' }} />
+                <Typography variant="caption" sx={{ color: 'var(--text-mute)', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 10.5 }}>
+                  <TrackChanges sx={{ fontSize: 13, mr: 0.6, verticalAlign: 'middle', color: 'var(--accent)' }} />
                   Мин. винрейт
                 </Typography>
                 <Chip
                   label={`≥ ${minWinrate}%`}
                   size="small"
                   sx={{
-                    color: '#fff',
+                    color: 'var(--text)',
                     fontWeight: 800,
-                    background: getWinrateGradient(minWinrate),
-                    border: '1px solid rgba(255,255,255,0.2)',
+                    background: 'var(--accent-soft)',
+                    border: '1px solid var(--accent-border)',
                   }}
                 />
               </Box>
@@ -407,14 +402,14 @@ const SwipePage: React.FC = () => {
                 valueLabelDisplay="auto"
                 sx={{
                   color: getWinrateColor(minWinrate),
-                  '& .MuiSlider-markLabel': { color: '#8a95a4', fontWeight: 700, fontSize: 11 },
+                  '& .MuiSlider-markLabel': { color: 'var(--text-mute)', fontWeight: 700, fontSize: 11 },
                 }}
               />
             </Box>
 
             {/* MMR диапазон */}
             <Box>
-              <Typography gutterBottom sx={{ color: '#a7b0bd', fontWeight: 600, fontSize: 13 }}>
+              <Typography gutterBottom sx={{ color: 'var(--text-dim)', fontWeight: 600, fontSize: 13 }}>
                 Диапазон MMR: <b className="gold-text">{mmrRange[0].toLocaleString('ru-RU')}</b> — <b className="gold-text">{mmrRange[1].toLocaleString('ru-RU')}</b>
               </Typography>
               <Slider
@@ -424,11 +419,11 @@ const SwipePage: React.FC = () => {
                 min={0}
                 max={10000}
                 step={50}
-                sx={{ mb: 2, color: '#c72731' }}
+                sx={{ mb: 2, color: 'var(--accent)' }}
               />
 
               <Box mb={2}>
-                <Typography variant="body2" sx={{ color: '#a7b0bd', mb: 1 }} gutterBottom>Быстрые пресеты:</Typography>
+                <Typography variant="body2" sx={{ color: 'var(--text-dim)', mb: 1 }} gutterBottom>Быстрые пресеты:</Typography>
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                   {[
                     ['Новички', 0, 1000],
@@ -445,9 +440,9 @@ const SwipePage: React.FC = () => {
                         onClick={() => setMmrRange([a as number, b as number])}
                         size="small"
                         sx={{
-                          background: active ? 'rgba(199,39,49,0.3)' : 'transparent',
-                          color: active ? '#fff' : '#a7b0bd',
-                          border: `1px solid ${active ? 'rgba(253,203,110,0.5)' : 'rgba(255,255,255,0.1)'}`,
+                          background: active ? 'var(--accent-soft)' : 'transparent',
+                          color: active ? 'var(--text)' : 'var(--text-dim)',
+                          border: `1px solid ${active ? 'var(--accent-border)' : 'var(--border)'}`,
                           fontWeight: 600,
                         }}
                       />
@@ -458,14 +453,14 @@ const SwipePage: React.FC = () => {
 
               <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
                 <FormControl size="small" sx={{ minWidth: 120 }}>
-                  <InputLabel sx={{ color: '#a7b0bd' }}>Мин. MMR</InputLabel>
-                  <Select value={mmrRange[0]} label="Мин. MMR" onChange={(e) => setMmrRange([Number(e.target.value), mmrRange[1]])} sx={{ color: '#fff' }}>
+                  <InputLabel sx={{ color: 'var(--text-dim)' }}>Мин. MMR</InputLabel>
+                  <Select value={mmrRange[0]} label="Мин. MMR" onChange={(e) => setMmrRange([Number(e.target.value), mmrRange[1]])} sx={{ color: 'var(--text)', background: 'rgba(255,255,255,0.03)', '& .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--border)' }, '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--border-strong)' }, '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--accent)' } }}>
                     {[0, 500, 1000, 2000, 3000, 4000, 5000].map((v) => <MenuItem key={v} value={v}>{v}</MenuItem>)}
                   </Select>
                 </FormControl>
                 <FormControl size="small" sx={{ minWidth: 120 }}>
-                  <InputLabel sx={{ color: '#a7b0bd' }}>Макс. MMR</InputLabel>
-                  <Select value={mmrRange[1]} label="Макс. MMR" onChange={(e) => setMmrRange([mmrRange[0], Number(e.target.value)])} sx={{ color: '#fff' }}>
+                  <InputLabel sx={{ color: 'var(--text-dim)' }}>Макс. MMR</InputLabel>
+                  <Select value={mmrRange[1]} label="Макс. MMR" onChange={(e) => setMmrRange([mmrRange[0], Number(e.target.value)])} sx={{ color: 'var(--text)', background: 'rgba(255,255,255,0.03)', '& .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--border)' }, '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--border-strong)' }, '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--accent)' } }}>
                     {[1000, 2000, 3000, 4000, 5000, 7000, 10000].map((v) => <MenuItem key={v} value={v}>{v}</MenuItem>)}
                   </Select>
                 </FormControl>
@@ -483,20 +478,20 @@ const SwipePage: React.FC = () => {
             label={`${mmrRange[0]}-${mmrRange[1]} MMR`}
             icon={<FilterList sx={{ fontSize: 14 }} />}
             size="small"
-            sx={{ background: 'rgba(199,39,49,0.12)', color: '#ff8f94', border: '1px solid rgba(199,39,49,0.35)', fontWeight: 700 }}
+            sx={{ background: 'var(--accent-soft)', color: 'var(--accent)', border: '1px solid var(--accent-border)', fontWeight: 700 }}
           />
           {roleFilter && (
             <Chip
               label={getRoleName(roleFilter)}
               size="small"
-              sx={{ color: '#fff', fontWeight: 800, background: `linear-gradient(135deg, ${getRoleColor(roleFilter)}, rgba(0,0,0,0.4))`, border: `1px solid ${getRoleColor(roleFilter)}99` }}
+              sx={{ color: 'var(--text)', fontWeight: 800, background: 'var(--accent-soft)', border: '1px solid var(--accent-border)' }}
             />
           )}
           {minWinrate > 0 && (
             <Chip
               label={`WR ≥ ${minWinrate}%`}
               size="small"
-              sx={{ background: getWinrateGradient(minWinrate), color: '#fff', fontWeight: 800, border: '1px solid rgba(255,255,255,0.18)' }}
+              sx={{ background: 'var(--accent-soft)', color: 'var(--text)', fontWeight: 800, border: '1px solid var(--accent-border)' }}
             />
           )}
         </Stack>
@@ -508,20 +503,15 @@ const SwipePage: React.FC = () => {
         className="dota-panel swipe-card-enter swipe-card-enter-active"
         sx={{ mb: 3, overflow: 'hidden', position: 'relative' }}
       >
-        <span className="dota-card-corner tl" />
-        <span className="dota-card-corner tr" />
-        <span className="dota-card-corner bl" />
-        <span className="dota-card-corner br" />
-
         {/* Hero banner */}
         <Box
           sx={{
             height: { xs: 200, sm: 240 },
             position: 'relative',
             background: currentPlayer.avatarUrl
-              ? `linear-gradient(180deg, rgba(11,14,19,0.15), rgba(11,14,19,0.82) 90%), url(${currentPlayer.avatarUrl}) center/cover`
-              : 'linear-gradient(135deg, #0f1419, #1c242e 60%, #c7273140)',
-            borderBottom: '1px solid rgba(253,203,110,0.2)',
+              ? `linear-gradient(180deg, rgba(10,10,12,0.15), rgba(10,10,12,0.82) 90%), url(${currentPlayer.avatarUrl}) center/cover`
+              : 'linear-gradient(135deg, var(--bg-elev-2), var(--bg))',
+            borderBottom: '1px solid var(--border)',
             display: 'flex',
             alignItems: 'flex-end',
             p: 3,
@@ -534,9 +524,9 @@ const SwipePage: React.FC = () => {
               sx={{
                 width: { xs: 72, sm: 88 },
                 height: { xs: 72, sm: 88 },
-                border: '3px solid rgba(253,203,110,0.55)',
-                boxShadow: '0 0 18px rgba(253,203,110,0.35)',
-                background: '#1c242e',
+                border: '3px solid var(--accent-border)',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                background: 'var(--bg-elev-2)',
                 fontSize: { xs: 28, sm: 34 },
                 fontWeight: 900,
               }}
@@ -544,10 +534,10 @@ const SwipePage: React.FC = () => {
               {currentPlayer.nickname?.[0]}
             </Avatar>
             <Box>
-              <Typography variant="h4" className="title-font" sx={{ color: '#fff', textShadow: '0 2px 10px rgba(0,0,0,0.8)', fontSize: { xs: 26, sm: 32 } }}>
+              <Typography variant="h4" className="title-font" sx={{ color: 'var(--text)', textShadow: '0 2px 10px rgba(0,0,0,0.8)', fontSize: { xs: 26, sm: 32 } }}>
                 {currentPlayer.nickname}
               </Typography>
-              <Typography variant="body2" sx={{ color: '#d4d9df' }}>
+              <Typography variant="body2" sx={{ color: 'var(--text-dim)' }}>
                 Steam ID: <span className="gold-text">{currentPlayer.steamId}</span>
               </Typography>
             </Box>
@@ -563,7 +553,7 @@ const SwipePage: React.FC = () => {
               size="lg"
             />
             <Stack spacing={0.6} alignItems="flex-end">
-              <Typography variant="caption" sx={{ color: '#8a95a4', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 10.5 }}>
+              <Typography variant="caption" sx={{ color: 'var(--text-mute)', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 10.5 }}>
                 Рейтинг MMR
               </Typography>
               <Typography sx={{
@@ -571,11 +561,7 @@ const SwipePage: React.FC = () => {
                 fontSize: 28,
                 lineHeight: 1,
                 fontFamily: "'Cinzel', serif",
-                background: 'linear-gradient(180deg, #fff3c4, #fdcb6e 55%, #d99a2c)',
-                WebkitBackgroundClip: 'text',
-                backgroundClip: 'text',
-                color: 'transparent',
-                textShadow: '0 0 22px rgba(253,203,110,0.25)',
+                color: 'var(--text)',
               }}>
                 {mmrDisplay.toLocaleString('ru-RU')}
               </Typography>
@@ -586,15 +572,14 @@ const SwipePage: React.FC = () => {
             <Chip
               label={getRoleName(currentPlayer.role)}
               sx={{
-                color: '#fff',
+                color: 'var(--text)',
                 fontWeight: 800,
                 fontSize: 14,
                 px: 0.8,
                 py: 0.8,
                 height: 'auto',
-                background: `linear-gradient(135deg, ${getRoleColor(currentPlayer.role)}, rgba(0,0,0,0.4))`,
-                boxShadow: `0 4px 18px ${getRoleColor(currentPlayer.role)}55`,
-                border: `1px solid ${getRoleColor(currentPlayer.role)}99`,
+                background: 'var(--accent-soft)',
+                border: '1px solid var(--accent-border)',
                 letterSpacing: '0.03em',
               }}
             />
@@ -602,11 +587,10 @@ const SwipePage: React.FC = () => {
               <Chip
                 label={`${winrateDisplay.toFixed(1)}% Винрейт`}
                 sx={{
-                  color: '#fff',
+                  color: 'var(--text)',
                   fontWeight: 800,
-                  background: getWinrateGradient(winrateDisplay),
-                  border: '1px solid rgba(255,255,255,0.18)',
-                  boxShadow: `0 4px 18px ${getWinrateColor(winrateDisplay)}55`,
+                  background: 'var(--accent-soft)',
+                  border: '1px solid var(--accent-border)',
                 }}
               />
             )}
@@ -615,21 +599,20 @@ const SwipePage: React.FC = () => {
           {winrateDisplay > 0 && (
             <Box sx={{ mb: 2.5 }}>
               <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.8}>
-                <Typography variant="caption" sx={{ color: '#8a95a4', letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: 10.5 }}>
+                <Typography variant="caption" sx={{ color: 'var(--text-mute)', letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: 10.5 }}>
                   Эффективность игрока
                 </Typography>
-                <Typography variant="caption" sx={{ color: getWinrateColor(winrateDisplay), fontWeight: 800 }}>
-                  {winrateDisplay >= 60 ? '🔥 Отличные показатели' : winrateDisplay >= 52 ? '✓ Хорошая форма' : winrateDisplay >= 48 ? '• Средний уровень' : '⚠ Есть над чем поработать'}
+                <Typography variant="caption" sx={{ color: 'var(--text-dim)', fontWeight: 800 }}>
+                  {winrateDisplay >= 60 ? 'Отличные показатели' : winrateDisplay >= 52 ? 'Хорошая форма' : winrateDisplay >= 48 ? 'Средний уровень' : 'Есть над чем поработать'}
                 </Typography>
               </Box>
-              <Box sx={{ height: 7, borderRadius: 3, background: 'rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+              <Box sx={{ height: 7, borderRadius: 3, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
                 <Box
                   sx={{
                     width: `${Math.min(100, Math.max(0, winrateDisplay))}%`,
                     height: '100%',
                     borderRadius: 3,
                     background: getWinrateGradient(winrateDisplay),
-                    boxShadow: `0 0 12px ${getWinrateColor(winrateDisplay)}66`,
                     transition: 'width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)',
                   }}
                 />
@@ -637,9 +620,9 @@ const SwipePage: React.FC = () => {
             </Box>
           )}
 
-          <Divider sx={{ borderColor: 'rgba(253,203,110,0.15)', my: 1.5 }} />
+          <Divider sx={{ borderColor: 'var(--border)', my: 1.5 }} />
 
-          <Typography variant="body2" sx={{ color: '#c4cdd6', lineHeight: 1.7, fontSize: 14 }}>
+          <Typography variant="body2" sx={{ color: 'var(--text-dim)', lineHeight: 1.7, fontSize: 14 }}>
             Кандидат в вашу команду для совместных каток. Оцените статсы, медаль, стиль игры и роль —
             решайте, тянете ли вы его в рейтинг или ищете кого-то покрепче.
           </Typography>
@@ -655,15 +638,15 @@ const SwipePage: React.FC = () => {
             sx={{
               width: 74,
               height: 74,
-              color: '#fff',
-              background: 'linear-gradient(180deg, #e74c3c, #7b191d)',
-              border: '1px solid rgba(253,203,110,0.35)',
-              boxShadow: '0 6px 24px rgba(231,76,60,0.5), inset 0 1px 0 rgba(255,255,255,0.12)',
+              color: 'var(--text-dim)',
+              background: 'var(--bg-elev-2)',
+              border: '1px solid var(--border)',
+              boxShadow: 'none',
               transition: 'all 0.2s ease',
               '&:hover': {
-                background: 'linear-gradient(180deg, #ff6b6b, #a12529)',
+                color: 'var(--text)',
+                borderColor: 'var(--accent)',
                 transform: 'translateY(-3px) rotate(-4deg)',
-                boxShadow: '0 10px 30px rgba(231,76,60,0.65)',
               },
               '&:active': { transform: 'translateY(0) rotate(0deg) scale(0.97)' },
             }}
@@ -680,14 +663,14 @@ const SwipePage: React.FC = () => {
               width: 74,
               height: 74,
               color: '#fff',
-              background: 'linear-gradient(180deg, #2ecc71, #0f5c34)',
-              border: '1px solid rgba(253,203,110,0.35)',
-              boxShadow: '0 6px 24px rgba(46,204,113,0.5), inset 0 1px 0 rgba(255,255,255,0.12)',
+              background: 'var(--accent)',
+              border: '1px solid var(--accent)',
+              boxShadow: 'none',
               transition: 'all 0.2s ease',
               '&:hover': {
-                background: 'linear-gradient(180deg, #55efc4, #1a8a52)',
+                background: 'var(--accent-hover)',
+                borderColor: 'var(--accent-hover)',
                 transform: 'translateY(-3px) rotate(4deg)',
-                boxShadow: '0 10px 30px rgba(46,204,113,0.65)',
               },
               '&:active': { transform: 'translateY(0) rotate(0deg) scale(0.97)' },
             }}

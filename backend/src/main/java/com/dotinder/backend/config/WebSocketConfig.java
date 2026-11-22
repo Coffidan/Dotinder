@@ -30,7 +30,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns("*")
+                .setAllowedOriginPatterns("http://localhost:3000", "http://127.0.0.1:3000")
                 .addInterceptors(new CustomHandshakeInterceptor())
                 .withSockJS();
         logger.info("WebSocket endpoint /ws registered with SockJS and handshake interceptor");
@@ -48,20 +48,16 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
                 StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
                 if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-                    Object sessionAttrs = accessor.getSessionAttributes();
-                    if (sessionAttrs != null) {
-                        Object steamIdRaw = accessor.getSessionAttributes().get("steamId");
-                        if (steamIdRaw != null) {
-                            accessor.setUser(new StompPrincipal(steamIdRaw.toString()));
-                            logger.debug("STOMP principal set: {}", steamIdRaw);
-                        } else {
-                            String fallbackLogin = accessor.getFirstNativeHeader("login");
-                            if (fallbackLogin != null && !fallbackLogin.isBlank()) {
-                                accessor.setUser(new StompPrincipal(fallbackLogin));
-                                logger.debug("STOMP principal set from login header: {}", fallbackLogin);
-                            }
-                        }
+                    // Личность берём ТОЛЬКО из сессии, клиентский заголовок "login" не доверяем.
+                    Object steamIdRaw = accessor.getSessionAttributes() != null
+                            ? accessor.getSessionAttributes().get("steamId")
+                            : null;
+                    if (steamIdRaw == null || steamIdRaw.toString().isBlank()) {
+                        logger.warn("STOMP CONNECT rejected: no authenticated session");
+                        throw new IllegalArgumentException("Unauthenticated WebSocket connection");
                     }
+                    accessor.setUser(new StompPrincipal(steamIdRaw.toString()));
+                    logger.debug("STOMP principal set: {}", steamIdRaw);
                 }
                 return message;
             }

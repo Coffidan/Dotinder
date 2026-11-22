@@ -54,7 +54,7 @@ const ChatPage: React.FC = () => {
         } catch (ignore) {}
         if (!cancelled) setMessages(history);
 
-        const socket = new SockJS(WS_URL);
+        const socket = new SockJS(WS_URL, undefined, { withCredentials: true });
         const client = new Client({
           webSocketFactory: () => socket,
           reconnectDelay: 5000,
@@ -121,7 +121,7 @@ const ChatPage: React.FC = () => {
   if (loadState === 'loading') {
     return (
       <Box className="centered-container">
-        <Typography variant="h4" className="gold-text">Подключение к арене...</Typography>
+        <Typography variant="h4" sx={{ color: 'var(--text)' }}>Подключение к арене...</Typography>
       </Box>
     );
   }
@@ -143,20 +143,20 @@ const ChatPage: React.FC = () => {
     <Box className="card-container">
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
         <Button variant="outlined" startIcon={<ArrowBack />} onClick={() => navigate('/profile')}>Назад</Button>
-        <Stack direction="row" spacing={1} useFlexGap>
+        <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
           {connected ? (
-            <Chip label="Подключено к арене" sx={{ background: 'rgba(46,204,113,0.18)', color: '#2ecc71', border: '1px solid rgba(46,204,113,0.4)', fontWeight: 700 }} />
+            <Chip label="Подключено к арене" sx={{ background: 'var(--accent-soft)', color: 'var(--accent)', border: '1px solid var(--accent-border)', fontWeight: 700 }} />
           ) : (
-            <Chip label="Подключение..." sx={{ background: 'rgba(253,203,110,0.15)', color: '#fdcb6e', border: '1px solid rgba(253,203,110,0.35)', fontWeight: 700 }} />
+            <Chip label="Подключение..." sx={{ background: 'rgba(255,255,255,0.04)', color: 'var(--text-dim)', border: '1px solid var(--border)', fontWeight: 700 }} />
           )}
-          <Chip label={`Вы: ${profile?.nickname || 'Player'}`} sx={{ background: 'rgba(199,39,49,0.15)', color: '#e4e4e4', border: '1px solid rgba(199,39,49,0.35)', fontWeight: 600 }} />
+          <Chip label={`Вы: ${profile?.nickname || 'Player'}`} sx={{ background: 'var(--accent-soft)', color: 'var(--text)', border: '1px solid var(--accent-border)', fontWeight: 600 }} />
         </Stack>
       </Box>
 
-      <Typography variant="h3" className="title-font" sx={{ mb: 1, color: '#fdcb6e', textAlign: 'center', fontSize: { xs: 26, sm: 32 } }}>
-        ⚔ ОБЩИЙ ЧАТ ⚔
+      <Typography variant="h3" className="title-font" sx={{ mb: 1, color: 'var(--text)', textAlign: 'center', fontSize: { xs: 26, sm: 32 } }}>
+        Общий чат
       </Typography>
-      <Typography variant="body2" sx={{ color: '#a7b0bd', textAlign: 'center', mb: 3 }}>
+      <Typography variant="body2" sx={{ color: 'var(--text-dim)', textAlign: 'center', mb: 3 }}>
         Поговорите с другими игроками арены • Обменяйтесь опытом и стратегиями • Сообщения доставляются в реальном времени
       </Typography>
 
@@ -164,11 +164,6 @@ const ChatPage: React.FC = () => {
         className="dota-panel"
         sx={{ position: 'relative', mb: 2, overflow: 'hidden' }}
       >
-        <span className="dota-card-corner tl" />
-        <span className="dota-card-corner tr" />
-        <span className="dota-card-corner bl" />
-        <span className="dota-card-corner br" />
-
         <Box
           ref={listRef}
           sx={{
@@ -178,17 +173,14 @@ const ChatPage: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             gap: 2,
-            background:
-              'radial-gradient(circle at top right, rgba(46,204,113,0.06), transparent 55%),' +
-              ' radial-gradient(circle at bottom left, rgba(199,39,49,0.06), transparent 55%),' +
-              ' #0b0e13',
+            background: 'var(--bg)',
           }}
         >
           {messages.length === 0 && (
-            <Box sx={{ my: 'auto', textAlign: 'center', color: '#a7b0bd' }}>
-              <Typography variant="h6" className="gold-text" sx={{ mb: 1 }}>Чат пуст</Typography>
+            <Box sx={{ my: 'auto', textAlign: 'center', color: 'var(--text-dim)' }}>
+              <Typography variant="h6" sx={{ mb: 1, color: 'var(--text)' }}>Чат пуст</Typography>
               <Typography variant="body2" sx={{ mb: 1 }}>Будьте первым, кто напишет что-нибудь в общий чат!</Typography>
-              <Typography variant="caption" sx={{ color: '#7f8a99' }}>
+              <Typography variant="caption" sx={{ color: 'var(--text-mute)' }}>
                 Рекомендуется: поздороваться, представиться и указать вашу основную роль и MMR
               </Typography>
             </Box>
@@ -202,23 +194,19 @@ const ChatPage: React.FC = () => {
                   maxWidth: '75%',
                   p: '11px 16px',
                   borderRadius: mine ? '15px 15px 3px 15px' : '15px 15px 15px 3px',
-                  background: mine
-                    ? 'linear-gradient(180deg, rgba(46,204,113,0.34), rgba(46,204,113,0.1))'
-                    : 'linear-gradient(180deg, rgba(199,39,49,0.28), rgba(199,39,49,0.08))',
-                  border: mine
-                    ? '1px solid rgba(46,204,113,0.42)'
-                    : '1px solid rgba(253,203,110,0.3)',
+                  background: mine ? 'rgba(198,40,40,0.16)' : '#191920',
+                  border: mine ? '1px solid rgba(198,40,40,0.4)' : '1px solid rgba(255,255,255,0.08)',
                   wordBreak: 'break-word',
-                  boxShadow: mine ? '0 4px 18px rgba(46,204,113,0.15)' : '0 4px 18px rgba(0,0,0,0.25)',
+                  boxShadow: 'none',
                 }}>
-                  <Typography variant="caption" sx={{ color: mine ? '#2ecc71' : '#fdcb6e', fontWeight: 800, display: 'block', mb: 0.4, fontSize: 11.5, letterSpacing: '0.02em' }}>
+                  <Typography variant="caption" sx={{ color: mine ? '#e57373' : 'var(--text-dim)', fontWeight: 800, display: 'block', mb: 0.4, fontSize: 11.5, letterSpacing: '0.02em' }}>
                     {mine ? 'Вы' : displayName}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: '#e4e4e4', lineHeight: 1.5, fontSize: 15 }}>
+                  <Typography variant="body2" sx={{ color: 'var(--text)', lineHeight: 1.5, fontSize: 15 }}>
                     {msg.content}
                   </Typography>
                   {msg.timestamp && (
-                    <Typography variant="caption" sx={{ display: 'block', mt: 0.7, color: '#7f8a99', fontSize: 10.5, textAlign: mine ? 'right' : 'left' }}>
+                    <Typography variant="caption" sx={{ display: 'block', mt: 0.7, color: 'var(--text-mute)', fontSize: 10.5, textAlign: mine ? 'right' : 'left' }}>
                       {new Date(msg.timestamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
                     </Typography>
                   )}
@@ -231,13 +219,8 @@ const ChatPage: React.FC = () => {
 
       <Box
         className="dota-panel"
-        sx={{ display: 'flex', gap: 1.5, p: 2.2, alignItems: 'center', position: 'relative' }}
+        sx={{ display: 'flex', gap: 1.5, p: 2.2, alignItems: 'center', position: 'relative', flexWrap: 'wrap' }}
       >
-        <span className="dota-card-corner tl" />
-        <span className="dota-card-corner tr" />
-        <span className="dota-card-corner bl" />
-        <span className="dota-card-corner br" />
-
         <TextField
           fullWidth
           size="small"
@@ -252,12 +235,13 @@ const ChatPage: React.FC = () => {
           placeholder="Введите сообщение для арены (Enter — отправить)..."
           disabled={false}
           sx={{
+            minWidth: 200,
             '& .MuiOutlinedInput-root': {
-              color: '#e4e4e4',
+              color: 'var(--text)',
               background: 'rgba(255,255,255,0.03)',
-              fieldset: { borderColor: 'rgba(253,203,110,0.3)' },
-              '&:hover fieldset': { borderColor: 'rgba(253,203,110,0.55)' },
-              '&.Mui-focused fieldset': { borderColor: 'rgba(46,204,113,0.75)' },
+              fieldset: { borderColor: 'var(--border)' },
+              '&:hover fieldset': { borderColor: 'var(--border-strong)' },
+              '&.Mui-focused fieldset': { borderColor: 'var(--accent)' },
             },
           }}
         />
@@ -273,8 +257,8 @@ const ChatPage: React.FC = () => {
         </Button>
       </Box>
 
-      <Divider sx={{ borderColor: 'rgba(253,203,110,0.12)', my: 3 }} />
-      <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', color: '#7f8a99', mb: 2 }}>
+      <Divider sx={{ borderColor: 'var(--border)', my: 3 }} />
+      <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', color: 'var(--text-mute)', mb: 2 }}>
         Подключено к WebSocket STOMP endpoint <span className="gold-text">/ws</span> • топик <span className="radiant-text">/topic/public</span>
       </Typography>
     </Box>

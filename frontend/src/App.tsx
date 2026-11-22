@@ -1,119 +1,67 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline, Tooltip } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
+import LogoMark from './components/LogoMark';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
 import SwipePage from './pages/SwipePage';
 import ChatPage from './pages/ChatPage';
 import MatchesPage from './pages/MatchesPage';
 
+// Единый акцентный цвет для всего интерфейса
+const ACCENT = '#c62828';
+
 const dotaTheme = createTheme({
   palette: {
     mode: 'dark',
-    primary: {
-      main: '#c72731',
-      light: '#ef494e',
-      dark: '#8f1e22',
-      contrastText: '#ffffff',
-    },
-    secondary: {
-      main: '#fdcb6e',
-      light: '#ffe19a',
-      dark: '#e1a336',
-      contrastText: '#1a1a1a',
-    },
-    success: {
-      main: '#22c55e',
-      light: '#4ade80',
-      dark: '#15803d',
-    },
-    error: {
-      main: '#ef4444',
-      light: '#f87171',
-    },
-    warning: {
-      main: '#f59e0b',
-    },
-    info: {
-      main: '#3b82f6',
-    },
-    background: {
-      default: '#07090d',
-      paper: '#141923',
-    },
-    text: {
-      primary: '#e8ecf1',
-      secondary: '#a0aab8',
-    },
-    divider: 'rgba(253, 203, 110, 0.22)',
+    primary: { main: ACCENT, light: '#e53935', dark: '#b71c1c', contrastText: '#ffffff' },
+    secondary: { main: '#ececef', contrastText: '#0a0a0c' },
+    background: { default: '#0a0a0c', paper: '#131317' },
+    text: { primary: '#ececef', secondary: '#9b9ba6' },
+    divider: 'rgba(255,255,255,0.08)',
   },
   typography: {
-    fontFamily: "'Rajdhani', -apple-system, BlinkMacSystemFont, sans-serif",
-    h1: { fontFamily: "'Cinzel', serif", fontWeight: 900 },
-    h2: { fontFamily: "'Cinzel', serif", fontWeight: 900 },
-    h3: { fontFamily: "'Cinzel', serif", fontWeight: 900 },
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+    h1: { fontFamily: "'Cinzel', serif", fontWeight: 800 },
+    h2: { fontFamily: "'Cinzel', serif", fontWeight: 800 },
+    h3: { fontFamily: "'Cinzel', serif", fontWeight: 800 },
     h4: { fontFamily: "'Cinzel', serif", fontWeight: 700 },
     h5: { fontFamily: "'Cinzel', serif", fontWeight: 700 },
     h6: { fontFamily: "'Cinzel', serif", fontWeight: 700 },
-    button: { fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' },
+    button: { fontWeight: 600, textTransform: 'none' },
   },
-  shape: {
-    borderRadius: 10,
-  },
+  shape: { borderRadius: 12 },
   components: {
     MuiPaper: {
       styleOverrides: {
-        root: {
-          backgroundImage: 'none',
-          background: 'linear-gradient(180deg, rgba(28, 36, 46, 0.9) 0%, rgba(16, 22, 30, 0.95) 100%)',
-          border: '1px solid rgba(253, 203, 110, 0.22)',
-          boxShadow: '0 10px 40px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.04)',
-        },
+        root: { backgroundImage: 'none', background: '#131317', border: '1px solid rgba(255,255,255,0.08)' },
       },
     },
     MuiCard: {
       styleOverrides: {
-        root: {
-          backgroundImage: 'none',
-          background: 'linear-gradient(180deg, rgba(28, 36, 46, 0.9) 0%, rgba(16, 22, 30, 0.95) 100%)',
-          border: '1px solid rgba(253, 203, 110, 0.24)',
-          boxShadow: '0 10px 40px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.04)',
-          borderRadius: 12,
-        },
+        root: { backgroundImage: 'none', background: '#131317', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14 },
       },
     },
     MuiButton: {
+      defaultProps: { disableElevation: true },
       styleOverrides: {
         outlined: {
-          borderColor: 'rgba(253, 203, 110, 0.38)',
-          color: '#fdcb6e',
-          '&:hover': { borderColor: '#fdcb6e', background: 'rgba(253, 203, 110, 0.08)' },
+          borderColor: 'rgba(255,255,255,0.16)',
+          color: '#ececef',
+          '&:hover': { borderColor: ACCENT, background: 'rgba(198,40,40,0.1)' },
         },
-      },
-    },
-    MuiChip: {
-      styleOverrides: {
-        root: { fontWeight: 600, letterSpacing: '0.02em' },
       },
     },
     MuiDialog: {
       styleOverrides: {
-        paper: {
-          background: 'linear-gradient(180deg, #1c242e 0%, #10161e 100%)',
-          border: '1px solid rgba(253, 203, 110, 0.3)',
-          borderRadius: 14,
-        },
+        paper: { background: '#131317', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14 },
       },
     },
-    MuiTextField: {
-      styleOverrides: {
-        root: {
-          '& .MuiOutlinedInput-root': {
-            borderRadius: 8,
-          },
-        },
-      },
+    MuiChip: {
+      styleOverrides: { root: { fontWeight: 600 } },
     },
   },
 });
@@ -124,6 +72,11 @@ const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Закрываем мобильное меню при смене страницы
+  useEffect(() => { setMenuOpen(false); }, [location.pathname]);
+
   if (isAuthPage(location.pathname)) return null;
 
   const links = [
@@ -138,7 +91,7 @@ const Navbar: React.FC = () => {
     setLoggingOut(true);
     try {
       await axios.post('http://localhost:8080/api/players/logout', {}, { withCredentials: true });
-    } catch (ignore) {}
+    } catch (ignore) { /* сессия всё равно будет сброшена на клиенте */ }
     navigate('/login');
     window.location.reload();
   };
@@ -149,15 +102,22 @@ const Navbar: React.FC = () => {
         <button
           className="dota-brand"
           onClick={() => navigate('/profile')}
-          style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 0 }}
+          style={{ border: 'none', background: 'none' }}
+          aria-label="На главную"
         >
-          <div className="dota-brand-logo">
-            <div className="dota-brand-logo-inner">D</div>
-          </div>
-          <div className="dota-brand-text">DOTINDER</div>
+          <LogoMark />
+          <span className="dota-brand-text">DOTINDER</span>
         </button>
 
-        <div className="dota-nav-links">
+        <button
+          className="dota-nav-toggle"
+          onClick={() => setMenuOpen((v) => !v)}
+          aria-label="Меню"
+        >
+          {menuOpen ? <CloseIcon fontSize="small" /> : <MenuIcon fontSize="small" />}
+        </button>
+
+        <div className={`dota-nav-links ${menuOpen ? 'open' : ''}`}>
           {links.map((link) => (
             <button
               key={link.path}
@@ -169,7 +129,7 @@ const Navbar: React.FC = () => {
           ))}
           <Tooltip title="Выйти из аккаунта" arrow placement="bottom">
             <button className="dota-logout-btn" onClick={handleLogout} disabled={loggingOut}>
-              {loggingOut ? '...' : 'Выход'}
+              {loggingOut ? 'Выходим...' : 'Выход'}
             </button>
           </Tooltip>
         </div>

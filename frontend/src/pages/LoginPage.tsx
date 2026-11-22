@@ -1,115 +1,85 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Chip, Stack, Divider } from '@mui/material';
+import { Box, Typography, Stack, Divider } from '@mui/material';
 import LoginButton from '../components/LoginButton';
+import LogoMark from '../components/LogoMark';
 
 const FEATURES = [
-  { icon: '🎯', text: 'Точный подбор по медали, MMR и винрейту' },
-  { icon: '💬', text: 'Приватные чаты с тиммейтами через WebSocket' },
-  { icon: '⚡', text: 'Автосинхронизация статистики с OpenDota' },
+  { icon: '🎯', text: 'Подбор тиммейтов по MMR, роли и винрейту' },
+  { icon: '💬', text: 'Приватные чаты с тиммейтами в реальном времени' },
+  { icon: '⚡', text: 'Автосинхронизация статистики через OpenDota' },
   { icon: '🏆', text: 'Фильтры по роли: Carry / Mid / Offlane / Support' },
 ];
 
 const LoginPage: React.FC = () => {
   const [mounted, setMounted] = useState(false);
+  const [authError, setAuthError] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    // Бэкенд может вернуть ?error=invalid, если вход через Steam не подтверждён
+    setAuthError(new URLSearchParams(window.location.search).get('error') === 'invalid');
   }, []);
 
   return (
     <Box className="login-page">
-      <Box className="login-grid" />
+      <Box className={`login-content ${mounted ? 'login-visible' : ''}`}>
+        <Box className="dota-panel login-panel" sx={{ px: { xs: 3, sm: 4.5 }, py: { xs: 4, sm: 5 } }}>
+          <Stack alignItems="center" spacing={0}>
+            <LogoMark size={60} />
 
-      <Box
-        className={`login-content ${mounted ? 'login-visible' : ''}`}
-        sx={{ width: '100%', maxWidth: 'none', px: { xs: 1, sm: 2, md: 3 }, py: 6 }}
-      >
-        <Box className="dota-panel login-panel" sx={{ px: { xs: 3, sm: 5, md: 6 }, py: { xs: 4, sm: 5, md: 6 } }}>
-          <span className="dota-card-corner tl" />
-          <span className="dota-card-corner tr" />
-          <span className="dota-card-corner bl" />
-          <span className="dota-card-corner br" />
-
-          <Box className="login-bar login-bar-top" />
-          <Box className="login-bar login-bar-bottom" />
-
-          <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Box className="login-international">
+            <Box className="login-international" sx={{ mt: 2.5 }}>
               <Box className="login-line login-line-left" />
-              <span>THE INTERNATIONAL</span>
+              <span>Dota 2 Team Finder</span>
               <Box className="login-line login-line-right" />
             </Box>
 
-            <Box className="dota-logo">
-              <Box className="dota-logo-glow" />
-              <Box className="dota-logo-inner">
-                <Stack direction="row" spacing={0.8} sx={{ alignItems: 'flex-end' }}>
-                  {['D', 'O', 'T', 'A'].map((ch, i) => (
-                    <Typography
-                      key={i}
-                      variant="h1"
-                      component="span"
-                      className={`dota-logo-letter ${i < 2 ? 'dire' : 'radiant'}`}
-                    >
-                      {ch}
-                    </Typography>
-                  ))}
-                </Stack>
-              </Box>
-            </Box>
-
-            <Typography variant="h2" component="h1" className="login-title">
+            <Typography variant="h1" component="h1" className="login-logo-text">
               DOTINDER
             </Typography>
+
             <Typography variant="subtitle1" className="login-subtitle">
-              Find Your Team. Rule The Battle.
+              Найди своих. Побеждай вместе.
             </Typography>
 
-            <Stack direction="row" spacing={1} justifyContent="center" sx={{ mb: 0 }}>
-              <Chip label="DIRE" size="small" className="dota-chip dire-chip" />
-              <Chip label="⚔" size="small" className="dota-chip sword-chip" />
-              <Chip label="RADIANT" size="small" className="dota-chip radiant-chip" />
+            <Divider sx={{ width: '100%', my: 3, borderColor: 'rgba(255,255,255,0.08)' }} />
+
+            <Typography variant="body1" className="login-description">
+              Найди <span className="gold-text">идеальных тиммейтов</span> по MMR, роли и стилю игры.
+              Собери состав, который выведет тебя к Immortal.
+            </Typography>
+
+            <Stack spacing={1.2} sx={{ width: '100%', mb: 3.5 }}>
+              {FEATURES.map((t, i) => (
+                <Box
+                  key={i}
+                  className="login-feature"
+                  sx={{
+                    opacity: mounted ? 1 : 0,
+                    transform: mounted ? 'translateX(0)' : 'translateX(-14px)',
+                    transition: `all 0.5s ease ${0.15 + i * 0.08}s`,
+                  }}
+                >
+                  <Typography sx={{ fontSize: 17 }}>{t.icon}</Typography>
+                  <Typography variant="body2" className="login-feature-text">
+                    {t.text}
+                  </Typography>
+                </Box>
+              ))}
             </Stack>
-          </Box>
 
-          <Divider className="login-divider" />
-
-          <Typography variant="body1" className="login-description">
-            Найди своих <span className="gold-text">идеальных тиммейтов</span> по MMR, роли и стилю игры.
-            Прокачайся вместе до Immortal и стань легендой плей-офф.
-          </Typography>
-
-          <Stack spacing={1.2} sx={{ mb: 4 }}>
-            {FEATURES.map((t, i) => (
-              <Box
-                key={i}
-                className={`login-feature ${i % 2 === 0 ? 'dire' : 'radiant'}`}
-                sx={{
-                  opacity: mounted ? 1 : 0,
-                  transform: mounted ? 'translateX(0)' : 'translateX(-16px)',
-                  transition: `all 0.5s ease ${0.2 + i * 0.1}s`,
-                }}
-              >
-                <Typography sx={{ fontSize: 18 }}>{t.icon}</Typography>
-                <Typography variant="body2" className="login-feature-text">
-                  {t.text}
-                </Typography>
-              </Box>
-            ))}
-          </Stack>
-
-          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
             <LoginButton />
-          </Box>
+
+            {authError && (
+              <Typography
+                variant="body2"
+                sx={{ mt: 2.5, color: '#e57373', fontWeight: 600, textAlign: 'center' }}
+              >
+                Не удалось подтвердить вход через Steam. Попробуйте ещё раз.
+              </Typography>
+            )}
+          </Stack>
         </Box>
       </Box>
-
-      <style>{`
-        @keyframes crestSpin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </Box>
   );
 };

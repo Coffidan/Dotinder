@@ -98,20 +98,12 @@ export const ROLE_NAMES: Record<string, string> = {
   hard_support: 'Хард саппорт',
 };
 
-export const ROLE_COLORS: Record<string, string> = {
-  carry: '#ef4444',
-  mid: '#3b82f6',
-  offlane: '#22c55e',
-  support: '#f59e0b',
-  hard_support: '#a855f7',
-};
-
 export function getRoleName(role?: string | null): string {
   return ROLE_NAMES[role || 'carry'] || 'Керри';
 }
 
-export function getRoleColor(role?: string | null): string {
-  return ROLE_COLORS[role || 'carry'] || ROLE_COLORS.carry;
+export function getRoleColor(_role?: string | null): string {
+  return '#c62828';
 }
 
 export function getMmrColor(mmr: number): string {
@@ -125,18 +117,12 @@ export function getMmrColor(mmr: number): string {
   return MEDAL_COLORS[8];
 }
 
-export function getWinrateColor(wr: number): string {
-  if (wr >= 60) return '#16a34a';
-  if (wr >= 52) return '#22c55e';
-  if (wr >= 48) return '#f59e0b';
-  return '#ef4444';
+export function getWinrateColor(_wr: number): string {
+  return '#c62828';
 }
 
-export function getWinrateGradient(wr: number): string {
-  if (wr >= 60) return 'linear-gradient(180deg, #22c55e, #15803d)';
-  if (wr >= 52) return 'linear-gradient(180deg, #84cc16, #4d7c0f)';
-  if (wr >= 48) return 'linear-gradient(180deg, #f59e0b, #b45309)';
-  return 'linear-gradient(180deg, #ef4444, #991b1b)';
+export function getWinrateGradient(_wr: number): string {
+  return 'linear-gradient(180deg, #e53935, #b71c1c)';
 }
 
 export const MEDAL_ROMAN: Record<number, string> = {

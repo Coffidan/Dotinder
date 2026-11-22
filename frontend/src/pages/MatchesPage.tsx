@@ -4,15 +4,14 @@ import SockJS from 'sockjs-client';
 import { Client, Message } from '@stomp/stompjs';
 import {
   Box, Typography, CardContent, Avatar, Chip, Button, Dialog,
-  DialogTitle, DialogContent, TextField, Stack, Divider
+  DialogTitle, DialogContent, TextField, Stack
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import ArrowBack from '@mui/icons-material/ArrowBack';
 import Send from '@mui/icons-material/Send';
 import ForumIcon from '@mui/icons-material/Forum';
 import {
-  getMedalFromRankTier, getMedalFromMmr, getRoleName, getRoleColor,
-  getWinrateColor, getWinrateGradient, API_BASE, WS_URL
+  getMedalFromRankTier, getMedalFromMmr, getRoleName, API_BASE, WS_URL
 } from '../utils/dotaHelpers';
 
 interface Match {
@@ -42,7 +41,7 @@ const MedalDisplay: React.FC<{ rankTier?: number; mmr?: number; leaderboardRank?
   rankTier, mmr = 0, leaderboardRank, size = 'md',
 }) => {
   const medal = rankTier ? getMedalFromRankTier(rankTier) : getMedalFromMmr(mmr);
-  const { color, glow, major, minor } = medal;
+  const { color, major, minor } = medal;
   const stars = major >= 8 ? 0 : Math.max(0, Math.min(5, minor));
   const dotSize = size === 'sm' ? 22 : 30;
 
@@ -50,9 +49,9 @@ const MedalDisplay: React.FC<{ rankTier?: number; mmr?: number; leaderboardRank?
     <Box
       className="medal-badge"
       sx={{
-        background: `linear-gradient(135deg, ${color}22, rgba(0,0,0,0.2))`,
+        background: 'rgba(255,255,255,0.03)',
         border: `1px solid ${color}55`,
-        boxShadow: `0 4px 20px ${glow}, inset 0 1px 0 rgba(255,255,255,0.06)`,
+        boxShadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
       }}
     >
       <Box
@@ -71,7 +70,7 @@ const MedalDisplay: React.FC<{ rankTier?: number; mmr?: number; leaderboardRank?
           lineHeight: 1.1,
           fontSize: size === 'sm' ? 12.5 : 15,
           color,
-          textShadow: `0 0 12px ${glow}`,
+          textShadow: 'none',
           fontFamily: "'Cinzel', serif",
           letterSpacing: '0.03em',
         }}>
@@ -85,14 +84,14 @@ const MedalDisplay: React.FC<{ rankTier?: number; mmr?: number; leaderboardRank?
                 width: size === 'sm' ? 5 : 7,
                 height: size === 'sm' ? 5 : 7,
                 borderRadius: 2,
-                background: i < stars ? `linear-gradient(180deg, ${color}, ${color}bb)` : 'rgba(255,255,255,0.06)',
-                boxShadow: i < stars ? `0 0 6px ${glow}` : 'none',
+                background: i < stars ? color : 'rgba(255,255,255,0.06)',
+                boxShadow: 'none',
                 transform: 'rotate(45deg)',
               }}
             />
           ))}
           {leaderboardRank && (
-            <Box sx={{ ml: 1, color: '#fbbf24', fontWeight: 800, fontSize: size === 'sm' ? 10 : 12, lineHeight: 1 }}>
+            <Box sx={{ ml: 1, color: 'var(--accent)', fontWeight: 800, fontSize: size === 'sm' ? 10 : 12, lineHeight: 1 }}>
               #{leaderboardRank}
             </Box>
           )}
@@ -133,7 +132,7 @@ const MatchesPage: React.FC = () => {
         setMatches(response.data || []);
         setError(null);
 
-        const socket = new SockJS(WS_URL);
+        const socket = new SockJS(WS_URL, undefined, { withCredentials: true });
         const client = new Client({
           webSocketFactory: () => socket,
           connectHeaders: { login: me.steamId },
@@ -228,7 +227,7 @@ const MatchesPage: React.FC = () => {
 
   if (loading) return (
     <Box className="centered-container">
-      <Typography variant="h4" className="gold-text">Загрузка мэтчей...</Typography>
+      <Typography variant="h4" sx={{ color: 'var(--text)' }}>Загрузка мэтчей...</Typography>
     </Box>
   );
   if (error) return (
@@ -239,8 +238,8 @@ const MatchesPage: React.FC = () => {
   );
   if (matches.length === 0) return (
     <Box className="centered-container">
-      <Typography variant="h3" className="gold-text" sx={{ mb: 2 }}>✦ НЕТ МЭТЧЕЙ ✦</Typography>
-      <Typography variant="body1" sx={{ color: '#a7b0bd', mb: 4, maxWidth: 460, textAlign: 'center' }}>
+      <Typography variant="h3" className="title-font" sx={{ mb: 2, color: 'var(--text)' }}>Нет мэтчей</Typography>
+      <Typography variant="body1" sx={{ color: 'var(--text-dim)', mb: 4, maxWidth: 460, textAlign: 'center' }}>
         Ни один игрок пока не откликнулся. Вернитесь к свайпам и выберите себе ещё тиммейтов —
         удача обязательно улыбнётся!
       </Typography>
@@ -256,20 +255,20 @@ const MatchesPage: React.FC = () => {
           <Chip
             label={`Всего: ${matches.length}`}
             size="small"
-            sx={{ background: 'rgba(46,204,113,0.12)', color: '#55efc4', border: '1px solid rgba(46,204,113,0.35)', fontWeight: 800 }}
+            sx={{ background: 'var(--accent-soft)', color: 'var(--accent)', border: '1px solid var(--accent-border)', fontWeight: 800 }}
           />
           {connected ? (
-            <Chip size="small" sx={{ background: 'rgba(46,204,113,0.18)', color: '#2ecc71', border: '1px solid rgba(46,204,113,0.4)', fontWeight: 700 }} label="WS • Online" />
+            <Chip size="small" sx={{ background: 'var(--accent-soft)', color: 'var(--accent)', border: '1px solid var(--accent-border)', fontWeight: 700 }} label="WS • Online" />
           ) : (
-            <Chip size="small" sx={{ background: 'rgba(253,203,110,0.15)', color: '#fdcb6e', border: '1px solid rgba(253,203,110,0.35)', fontWeight: 700 }} label="WS • Reconnect..." />
+            <Chip size="small" sx={{ background: 'rgba(255,255,255,0.04)', color: 'var(--text-dim)', border: '1px solid var(--border)', fontWeight: 700 }} label="WS • Reconnect..." />
           )}
         </Stack>
       </Box>
 
-      <Typography variant="h3" className="title-font" sx={{ mb: 1, color: '#fdcb6e', textAlign: 'center', fontSize: { xs: 26, sm: 32 } }}>
-        ⚔ МОИ МЭТЧИ ⚔
+      <Typography variant="h3" className="title-font" sx={{ mb: 1, color: 'var(--text)', textAlign: 'center', fontSize: { xs: 26, sm: 32 } }}>
+        Мои мэтчи
       </Typography>
-      <Typography variant="body2" sx={{ color: '#a7b0bd', textAlign: 'center', mb: 4 }}>
+      <Typography variant="body2" sx={{ color: 'var(--text-dim)', textAlign: 'center', mb: 4 }}>
         Взаимных симпатий: <b className="gold-text">{matches.length}</b> • Нажмите «Открыть чат», чтобы начать общение
       </Typography>
 
@@ -283,11 +282,6 @@ const MatchesPage: React.FC = () => {
               className="dota-panel card-slide-up"
               sx={{ position: 'relative', p: 2.5, display: 'flex', gap: 2.5, alignItems: 'center', flexWrap: 'wrap', animationDelay: `${idx * 60}ms` }}
             >
-              <span className="dota-card-corner tl" />
-              <span className="dota-card-corner tr" />
-              <span className="dota-card-corner bl" />
-              <span className="dota-card-corner br" />
-
               <Box sx={{ position: 'relative' }}>
                 <Avatar
                   src={match.avatarUrl || undefined}
@@ -296,9 +290,9 @@ const MatchesPage: React.FC = () => {
                     width: { xs: 68, sm: 76 },
                     height: { xs: 68, sm: 76 },
                     flexShrink: 0,
-                    border: '2px solid rgba(253,203,110,0.5)',
-                    boxShadow: '0 0 14px rgba(46,204,113,0.3)',
-                    background: '#1c242e',
+                    border: '2px solid var(--accent-border)',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                    background: 'var(--bg-elev-2)',
                     fontWeight: 800,
                     fontSize: 26,
                   }}
@@ -306,25 +300,23 @@ const MatchesPage: React.FC = () => {
                   {match.nickname?.[0]}
                 </Avatar>
                 <Box
-                  className="match-banner"
                   sx={{
                     position: 'absolute',
                     top: -6,
                     right: -6,
-                    width: 18,
-                    height: 18,
+                    width: 12,
+                    height: 12,
                     borderRadius: '50%',
-                    border: '2px solid #0b0e13',
-                    boxShadow: '0 0 10px rgba(46,204,113,0.7)',
+                    background: 'var(--accent)',
+                    border: '2px solid var(--bg)',
                   }}
                 />
               </Box>
 
               <CardContent sx={{ flex: 1, p: 0, minWidth: 240, '&:last-child': { pb: 0 } }}>
                 <Box display="flex" alignItems="center" gap={1.5} mb={1.2} flexWrap="wrap">
-                  <Typography variant="h6" className="title-font" sx={{ color: '#fff', lineHeight: 1.1 }}>
+                  <Typography variant="h6" className="title-font" sx={{ color: 'var(--text)', lineHeight: 1.1 }}>
                     {match.nickname}
-                    <Box component="span" className="radiant-text" sx={{ fontSize: 14, ml: 0.6 }}>✦</Box>
                   </Typography>
                   {unreadCount > 0 && (
                     <Chip
@@ -335,9 +327,9 @@ const MatchesPage: React.FC = () => {
                         height: 22,
                         fontWeight: 900,
                         color: '#fff',
-                        background: 'linear-gradient(180deg, #d93a3f, #8f1e22)',
-                        border: '1px solid rgba(253,203,110,0.4)',
-                        boxShadow: '0 0 12px rgba(199,39,49,0.55)',
+                        background: 'var(--accent)',
+                        border: '1px solid var(--accent)',
+                        boxShadow: 'none',
                       }}
                     />
                   )}
@@ -350,9 +342,9 @@ const MatchesPage: React.FC = () => {
                       label={`${match.mmr ?? 0} MMR`}
                       size="small"
                       sx={{
-                        background: 'linear-gradient(180deg, rgba(253,203,110,0.22), rgba(253,203,110,0.06))',
-                        color: '#fdcb6e',
-                        border: '1px solid rgba(253,203,110,0.35)',
+                        background: 'var(--accent-soft)',
+                        color: 'var(--accent)',
+                        border: '1px solid var(--accent-border)',
                         fontWeight: 800,
                       }}
                     />
@@ -360,10 +352,10 @@ const MatchesPage: React.FC = () => {
                       label={getRoleName(match.role)}
                       size="small"
                       sx={{
-                        color: '#fff',
+                        color: 'var(--text)',
                         fontWeight: 800,
-                        background: `linear-gradient(135deg, ${getRoleColor(match.role)}, rgba(0,0,0,0.4))`,
-                        border: `1px solid ${getRoleColor(match.role)}99`,
+                        background: 'var(--accent-soft)',
+                        border: '1px solid var(--accent-border)',
                       }}
                     />
                     {wr > 0 && (
@@ -371,10 +363,10 @@ const MatchesPage: React.FC = () => {
                         label={`${wr.toFixed(1)}% WR`}
                         size="small"
                         sx={{
-                          color: '#fff',
+                          color: 'var(--text)',
                           fontWeight: 800,
-                          background: getWinrateGradient(wr),
-                          border: '1px solid rgba(255,255,255,0.18)',
+                          background: 'var(--accent-soft)',
+                          border: '1px solid var(--accent-border)',
                         }}
                       />
                     )}
@@ -414,11 +406,11 @@ const MatchesPage: React.FC = () => {
         PaperProps={{ sx: { borderRadius: 2, overflow: 'hidden' } }}
       >
         <DialogTitle sx={{
-          borderBottom: '1px solid rgba(253,203,110,0.25)',
+          borderBottom: '1px solid var(--border)',
           fontFamily: "'Cinzel', serif",
-          color: '#fdcb6e',
+          color: 'var(--text)',
           fontWeight: 700,
-          background: 'linear-gradient(180deg, rgba(199,39,49,0.15), transparent)',
+          background: 'transparent',
           display: 'flex',
           alignItems: 'center',
           gap: 1.5,
@@ -427,25 +419,25 @@ const MatchesPage: React.FC = () => {
         }}>
           <Avatar
             src={currentPartner?.avatarUrl || undefined}
-            sx={{ width: 38, height: 38, border: '2px solid rgba(253,203,110,0.55)', fontWeight: 800, fontSize: 16 }}
+            sx={{ width: 38, height: 38, border: '2px solid var(--accent-border)', fontWeight: 800, fontSize: 16 }}
           >
             {currentPartner?.nickname?.[0]}
           </Avatar>
           <Box flex={1} minWidth={100}>
-            <Typography variant="h6" className="title-font" sx={{ fontSize: 18, color: '#fff', lineHeight: 1.1 }}>
+            <Typography variant="h6" className="title-font" sx={{ fontSize: 18, color: 'var(--text)', lineHeight: 1.1 }}>
               {currentPartner?.nickname}
             </Typography>
             <Stack direction="row" spacing={0.8} mt={0.3}>
               {connected ? (
-                <Chip size="small" sx={{ background: 'rgba(46,204,113,0.2)', color: '#2ecc71', fontWeight: 700, height: 20, fontSize: 10.5 }} label="Online" />
+                <Chip size="small" sx={{ background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 700, height: 20, fontSize: 10.5, border: '1px solid var(--accent-border)' }} label="Online" />
               ) : (
-                <Chip size="small" sx={{ background: 'rgba(231,76,60,0.2)', color: '#e74c3c', fontWeight: 700, height: 20, fontSize: 10.5 }} label="Reconnect..." />
+                <Chip size="small" sx={{ background: 'rgba(255,255,255,0.04)', color: 'var(--text-dim)', fontWeight: 700, height: 20, fontSize: 10.5, border: '1px solid var(--border)' }} label="Reconnect..." />
               )}
               {currentPartner && (
                 <Chip
                   size="small"
                   label={`${currentPartner.mmr ?? 0} MMR`}
-                  sx={{ background: 'rgba(253,203,110,0.1)', color: '#fdcb6e', fontWeight: 700, height: 20, fontSize: 10.5, border: '1px solid rgba(253,203,110,0.25)' }}
+                  sx={{ background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 700, height: 20, fontSize: 10.5, border: '1px solid var(--accent-border)' }}
                 />
               )}
             </Stack>
@@ -461,49 +453,42 @@ const MatchesPage: React.FC = () => {
               display: 'flex',
               flexDirection: 'column',
               gap: 1.5,
-              background:
-                'radial-gradient(circle at top right, rgba(46,204,113,0.08), transparent 55%), radial-gradient(circle at bottom left, rgba(199,39,49,0.08), transparent 55%), #0b0e13',
+              background: 'var(--bg)',
             }}
           >
             {chatMessages.length === 0 && (
-              <Box sx={{ my: 'auto', textAlign: 'center', color: '#a7b0bd' }}>
-                <Typography variant="h6" className="gold-text" sx={{ mb: 1 }}>Приватный чат</Typography>
+              <Box sx={{ my: 'auto', textAlign: 'center', color: 'var(--text-dim)' }}>
+                <Typography variant="h6" sx={{ mb: 1, color: 'var(--text)' }}>Приватный чат</Typography>
                 <Typography variant="body2" sx={{ mb: 1 }}>Напишите первое сообщение, чтобы начать общение</Typography>
-                <Typography variant="caption" sx={{ color: '#7f8a99' }}>
+                <Typography variant="caption" sx={{ color: 'var(--text-mute)' }}>
                   Все сообщения доставляются через WebSocket в режиме реального времени
                 </Typography>
               </Box>
             )}
             {chatMessages.map((msg, idx) => {
               const mine = (msg.senderId || msg.sender) === profile?.steamId;
-              const other = (msg.senderId || msg.sender) === currentPartner?.steamId;
-              const accent = mine ? 'radiant' : other ? 'gold' : 'gold';
               return (
                 <Box key={idx} sx={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start' }}>
                   <Box sx={{
                     maxWidth: '80%',
                     p: '9px 14px',
                     borderRadius: mine ? '14px 14px 2px 14px' : '14px 14px 14px 2px',
-                    background: mine
-                      ? 'linear-gradient(180deg, rgba(46,204,113,0.32), rgba(46,204,113,0.1))'
-                      : 'linear-gradient(180deg, rgba(253,203,110,0.18), rgba(253,203,110,0.05))',
-                    border: mine
-                      ? '1px solid rgba(46,204,113,0.4)'
-                      : '1px solid rgba(253,203,110,0.32)',
+                    background: mine ? 'rgba(198,40,40,0.16)' : '#191920',
+                    border: mine ? '1px solid rgba(198,40,40,0.4)' : '1px solid rgba(255,255,255,0.08)',
                     wordBreak: 'break-word',
-                    boxShadow: mine ? '0 4px 14px rgba(46,204,113,0.15)' : '0 4px 14px rgba(0,0,0,0.25)',
+                    boxShadow: 'none',
                     position: 'relative',
                   }}>
                     <Typography variant="caption" sx={{
-                      color: accent === 'radiant' ? '#2ecc71' : '#fdcb6e',
+                      color: mine ? '#e57373' : 'var(--text-dim)',
                       fontWeight: 800, display: 'block', mb: 0.3, fontSize: 11,
                       letterSpacing: '0.03em', textTransform: 'uppercase',
                     }}>
                       {mine ? 'Вы' : currentPartner?.nickname || 'Собеседник'}
                     </Typography>
-                    <Typography variant="body2" sx={{ color: '#e4e4e4', lineHeight: 1.5, fontSize: 14.5 }}>{msg.content}</Typography>
+                    <Typography variant="body2" sx={{ color: 'var(--text)', lineHeight: 1.5, fontSize: 14.5 }}>{msg.content}</Typography>
                     {msg.timestamp && (
-                      <Typography variant="caption" sx={{ display: 'block', mt: 0.6, color: '#7f8a99', fontSize: 10.5, textAlign: mine ? 'right' : 'left' }}>
+                      <Typography variant="caption" sx={{ display: 'block', mt: 0.6, color: 'var(--text-mute)', fontSize: 10.5, textAlign: mine ? 'right' : 'left' }}>
                         {new Date(msg.timestamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
                       </Typography>
                     )}
@@ -512,7 +497,7 @@ const MatchesPage: React.FC = () => {
               );
             })}
           </Box>
-          <Box sx={{ display: 'flex', gap: 1, p: 2, background: '#0c1015', borderTop: '1px solid rgba(253,203,110,0.22)' }}>
+          <Box sx={{ display: 'flex', gap: 1, p: 2, background: 'var(--bg-elev-2)', borderTop: '1px solid var(--border)' }}>
             <TextField
               fullWidth
               size="small"
@@ -528,11 +513,11 @@ const MatchesPage: React.FC = () => {
               disabled={false}
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  color: '#e4e4e4',
+                  color: 'var(--text)',
                   background: 'rgba(255,255,255,0.03)',
-                  fieldset: { borderColor: 'rgba(253,203,110,0.3)' },
-                  '&:hover fieldset': { borderColor: 'rgba(253,203,110,0.5)' },
-                  '&.Mui-focused fieldset': { borderColor: 'rgba(46,204,113,0.65)' },
+                  fieldset: { borderColor: 'var(--border)' },
+                  '&:hover fieldset': { borderColor: 'var(--border-strong)' },
+                  '&.Mui-focused fieldset': { borderColor: 'var(--accent)' },
                 },
               }}
             />

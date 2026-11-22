@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
   Card, CardContent, Typography, Avatar, Button, Box, Chip, Select, MenuItem,
-  FormControl, InputLabel, Stack, CircularProgress, Tooltip, Divider
+  FormControl, InputLabel, Stack, CircularProgress, Tooltip
 } from '@mui/material';
 import {
   EmojiEvents, Person, Refresh, MilitaryTech
 } from '@mui/icons-material';
 import {
-  getMedalFromRankTier, getMedalFromMmr, getRoleName, getRoleColor,
+  getMedalFromRankTier, getMedalFromMmr, getRoleName,
   getWinrateColor, getWinrateGradient
 } from '../utils/dotaHelpers';
 
@@ -38,9 +38,9 @@ const MedalDisplay: React.FC<{ rankTier?: number; mmr?: number; leaderboardRank?
     <Box
       className="medal-badge"
       sx={{
-        background: `linear-gradient(135deg, ${color}22, rgba(0,0,0,0.2))`,
+        background: 'rgba(255,255,255,0.03)',
         border: `1px solid ${color}55`,
-        boxShadow: `0 4px 20px ${glow}, inset 0 1px 0 rgba(255,255,255,0.06)`,
+        boxShadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
       }}
     >
       <Box
@@ -66,7 +66,7 @@ const MedalDisplay: React.FC<{ rankTier?: number; mmr?: number; leaderboardRank?
           lineHeight: 1.1,
           fontSize: 16,
           color,
-          textShadow: `0 0 12px ${glow}`,
+          textShadow: 'none',
           fontFamily: "'Cinzel', serif",
           letterSpacing: '0.03em',
         }}>
@@ -82,17 +82,15 @@ const MedalDisplay: React.FC<{ rankTier?: number; mmr?: number; leaderboardRank?
                   width: 7,
                   height: 7,
                   borderRadius: 2,
-                  background: active
-                    ? `linear-gradient(180deg, ${color}, ${color}bb)`
-                    : 'rgba(255,255,255,0.06)',
-                  boxShadow: active ? `0 0 6px ${glow}` : 'none',
+                  background: active ? color : 'rgba(255,255,255,0.06)',
+                  boxShadow: 'none',
                   transform: 'rotate(45deg)',
                 }}
               />
             );
           })}
           {leaderboardRank && (
-            <Box sx={{ ml: 1, color: '#fbbf24', fontWeight: 800, fontSize: 12, lineHeight: 1 }}>
+            <Box sx={{ ml: 1, color: 'var(--accent)', fontWeight: 800, fontSize: 12, lineHeight: 1 }}>
               #{leaderboardRank}
             </Box>
           )}
@@ -169,12 +167,12 @@ const ProfilePage: React.FC = () => {
         <Card sx={{ overflow: 'hidden' }}>
           <CardContent sx={{ p: 4 }}>
             <Stack direction="row" spacing={3}>
-              <CircularProgress size={48} sx={{ color: '#fdcb6e' }} />
+              <CircularProgress size={48} sx={{ color: 'var(--accent)' }} />
               <Box flex={1}>
-                <Typography variant="h5" className="gold-text" sx={{ mb: 1 }}>
+                <Typography variant="h5" sx={{ mb: 1, color: 'var(--text)' }}>
                   Загрузка профиля...
                 </Typography>
-                <Typography variant="body2" sx={{ color: '#a7b0bd' }}>
+                <Typography variant="body2" sx={{ color: 'var(--text-dim)' }}>
                   Получаем твои данные из арены
                 </Typography>
               </Box>
@@ -199,7 +197,7 @@ const ProfilePage: React.FC = () => {
   if (!profile) {
     return (
       <Box className="centered-container">
-        <Typography variant="h5" sx={{ color: '#a7b0bd', mb: 2 }}>
+        <Typography variant="h5" sx={{ color: 'var(--text-dim)', mb: 2 }}>
           Нет данных профиля
         </Typography>
       </Box>
@@ -219,9 +217,9 @@ const ProfilePage: React.FC = () => {
             mb: 2,
             p: 1.5,
             borderRadius: 2,
-            background: 'rgba(46,204,113,0.12)',
-            border: '1px solid rgba(46,204,113,0.4)',
-            color: '#2ecc71',
+            background: 'var(--accent-soft)',
+            border: '1px solid var(--accent-border)',
+            color: 'var(--accent)',
             fontWeight: 700,
             textAlign: 'center',
           }}
@@ -241,8 +239,8 @@ const ProfilePage: React.FC = () => {
             top: 0, left: 0, right: 0,
             height: 150,
             background: profile.avatarUrl
-              ? `linear-gradient(180deg, rgba(8,10,16,0.1) 0%, rgba(8,10,16,0.92) 100%), url(${profile.avatarUrl}) center/cover`
-              : 'linear-gradient(135deg, rgba(199,39,49,0.25), rgba(46,204,113,0.15), rgba(253,203,110,0.08))',
+              ? `linear-gradient(180deg, rgba(10,10,12,0.1) 0%, rgba(10,10,12,0.92) 100%), url(${profile.avatarUrl}) center/cover`
+              : 'linear-gradient(135deg, rgba(198,40,40,0.18), rgba(10,10,12,0.6))',
             pointerEvents: 'none',
           }}
         />
@@ -253,9 +251,9 @@ const ProfilePage: React.FC = () => {
               sx={{
                 width: { xs: 96, sm: 120 },
                 height: { xs: 96, sm: 120 },
-                border: '3px solid rgba(253,203,110,0.6)',
-                boxShadow: '0 0 28px rgba(253,203,110,0.25), 0 10px 30px rgba(0,0,0,0.55)',
-                bgcolor: '#1c242e',
+                border: '3px solid var(--accent-border)',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                bgcolor: 'var(--bg-elev-2)',
                 fontSize: { xs: 38, sm: 46 },
                 fontWeight: 900,
               }}
@@ -268,22 +266,22 @@ const ProfilePage: React.FC = () => {
                 className="title-font"
                 sx={{
                   mb: 0.5,
-                  color: '#fff',
+                  color: 'var(--text)',
                   textShadow: '0 2px 14px rgba(0,0,0,0.7)',
                   fontSize: { xs: 26, sm: 32 },
                 }}
               >
                 {profile.nickname ?? 'Без имени'}
               </Typography>
-              <Typography variant="body2" sx={{ color: '#a7b0bd', mb: 0.5 }}>
+              <Typography variant="body2" sx={{ color: 'var(--text-dim)', mb: 0.5 }}>
                 Steam ID: <span className="gold-text">{profile.steamId ?? '—'}</span>
               </Typography>
               <Stack direction="row" spacing={2} useFlexGap flexWrap="wrap">
-                <Typography variant="caption" sx={{ color: '#8a95a4' }}>
+                <Typography variant="caption" sx={{ color: 'var(--text-mute)' }}>
                   Вход: {profile.lastLogin ? new Date(profile.lastLogin).toLocaleString() : '—'}
                 </Typography>
                 {profile.lastStatsUpdate && (
-                  <Typography variant="caption" sx={{ color: '#8a95a4' }}>
+                  <Typography variant="caption" sx={{ color: 'var(--text-mute)' }}>
                     Стат: {new Date(profile.lastStatsUpdate).toLocaleDateString()}
                   </Typography>
                 )}
@@ -305,7 +303,7 @@ const ProfilePage: React.FC = () => {
             gap={2}
           >
             <Typography variant="h6" className="title-font" display="flex" alignItems="center" gap={1}>
-              <EmojiEvents sx={{ color: '#fdcb6e' }} />
+              <EmojiEvents sx={{ color: 'var(--accent)' }} />
               <span>Статистика игрока</span>
             </Typography>
             <Tooltip title="Синхронизировать статистику с OpenDota" arrow>
@@ -316,11 +314,11 @@ const ProfilePage: React.FC = () => {
                 startIcon={updatingOpenDota ? <CircularProgress size={16} sx={{ color: '#fff' }} /> : <Refresh />}
                 size="small"
                 sx={{
-                  background: 'linear-gradient(180deg, #f59e0b, #b45309)',
+                  background: 'var(--accent)',
                   color: '#fff',
-                  '&:hover': { background: 'linear-gradient(180deg, #fbbf24, #d97706)' },
-                  boxShadow: '0 4px 14px rgba(251,191,36,0.32)',
-                  border: '1px solid rgba(253,203,110,0.45)',
+                  '&:hover': { background: 'var(--accent-hover)' },
+                  boxShadow: 'none',
+                  border: '1px solid var(--accent)',
                   letterSpacing: '0.04em',
                   textTransform: 'uppercase',
                   fontWeight: 700,
@@ -338,8 +336,8 @@ const ProfilePage: React.FC = () => {
               sx={{
                 p: 2.5,
                 borderRadius: 2,
-                background: 'linear-gradient(135deg, rgba(253,203,110,0.06), rgba(199,39,49,0.04))',
-                border: '1px solid rgba(253,203,110,0.18)',
+                background: 'var(--bg-elev-2)',
+                border: '1px solid var(--border)',
               }}
             >
               <Stack direction="row" spacing={3} useFlexGap flexWrap="wrap" alignItems="center">
@@ -349,7 +347,7 @@ const ProfilePage: React.FC = () => {
                   leaderboardRank={profile.leaderboardRank}
                 />
                 <Stack spacing={0.6} flex={1} minWidth={200}>
-                  <Typography variant="caption" sx={{ color: '#8a95a4', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 10.5 }}>
+                  <Typography variant="caption" sx={{ color: 'var(--text-mute)', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 10.5 }}>
                     Рейтинг MMR
                   </Typography>
                   <Typography sx={{
@@ -357,19 +355,14 @@ const ProfilePage: React.FC = () => {
                     fontSize: 30,
                     lineHeight: 1,
                     fontFamily: "'Cinzel', serif",
-                    background: 'linear-gradient(180deg, #fff3c4, #fdcb6e 55%, #d99a2c)',
-                    WebkitBackgroundClip: 'text',
-                    backgroundClip: 'text',
-                    color: 'transparent',
-                    textShadow: '0 0 22px rgba(253,203,110,0.25)',
+                    color: 'var(--text)',
                   }}>
                     {mmrDisplay.toLocaleString('ru-RU')}
                     <Typography component="span" sx={{
                       fontSize: 16,
                       fontWeight: 700,
                       ml: 0.8,
-                      color: '#a7b0bd',
-                      WebkitTextFillColor: '#a7b0bd',
+                      color: 'var(--text-dim)',
                     }}>
                       MMR
                     </Typography>
@@ -386,22 +379,11 @@ const ProfilePage: React.FC = () => {
                 sx={{
                   p: 2.5,
                   borderRadius: 2,
-                  background: 'rgba(0,0,0,0.2)',
-                  border: '1px solid rgba(255,255,255,0.06)',
-                  position: 'relative',
-                  overflow: 'hidden',
+                  background: 'var(--bg-elev-2)',
+                  border: '1px solid var(--border)',
                 }}
               >
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    inset: 0,
-                    background: `linear-gradient(90deg, ${getWinrateGradient(winrateDisplay).replace('linear-gradient(180deg,', 'linear-gradient(90deg,')} 0%, transparent ${Math.min(100, Math.max(20, winrateDisplay))}%)`,
-                    opacity: 0.18,
-                    pointerEvents: 'none',
-                  }}
-                />
-                <Typography variant="caption" sx={{ color: '#8a95a4', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 10.5 }}>
+                <Typography variant="caption" sx={{ color: 'var(--text-mute)', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 10.5 }}>
                   Винрейт
                 </Typography>
                 <Stack direction="row" alignItems="baseline" spacing={1.5} useFlexGap sx={{ mt: 0.8 }}>
@@ -411,7 +393,6 @@ const ProfilePage: React.FC = () => {
                     lineHeight: 1,
                     fontFamily: "'Cinzel', serif",
                     color: getWinrateColor(winrateDisplay),
-                    textShadow: winrateDisplay >= 52 ? `0 0 18px ${getWinrateColor(winrateDisplay)}66` : 'none',
                   }}>
                     {winrateDisplay ? winrateDisplay.toFixed(1) : '—'}
                     <Typography component="span" sx={{ fontSize: 16, fontWeight: 700, ml: 0.5, opacity: 0.7 }}>
@@ -419,20 +400,19 @@ const ProfilePage: React.FC = () => {
                     </Typography>
                   </Typography>
                   {winrateDisplay > 0 && (
-                    <Typography variant="body2" sx={{ color: '#a7b0bd' }}>
+                    <Typography variant="body2" sx={{ color: 'var(--text-dim)' }}>
                       {winrateDisplay >= 60 ? 'Отлично' : winrateDisplay >= 52 ? 'Хорошо' : winrateDisplay >= 48 ? 'Средне' : 'Есть куда расти'}
                     </Typography>
                   )}
                 </Stack>
                 {/* Progress bar */}
-                <Box sx={{ mt: 1.8, height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+                <Box sx={{ mt: 1.8, height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
                   <Box
                     sx={{
                       width: `${Math.min(100, Math.max(0, winrateDisplay))}%`,
                       height: '100%',
                       borderRadius: 3,
                       background: getWinrateGradient(winrateDisplay),
-                      boxShadow: `0 0 12px ${getWinrateColor(winrateDisplay)}66`,
                       transition: 'width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)',
                     }}
                   />
@@ -445,12 +425,12 @@ const ProfilePage: React.FC = () => {
                 sx={{
                   p: 2.5,
                   borderRadius: 2,
-                  background: 'rgba(0,0,0,0.2)',
-                  border: '1px solid rgba(255,255,255,0.06)',
+                  background: 'var(--bg-elev-2)',
+                  border: '1px solid var(--border)',
                 }}
               >
                 <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.2 }}>
-                  <Typography variant="caption" sx={{ color: '#8a95a4', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 10.5 }}>
+                  <Typography variant="caption" sx={{ color: 'var(--text-mute)', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 10.5 }}>
                     Текущая роль
                   </Typography>
                   <Button
@@ -466,15 +446,14 @@ const ProfilePage: React.FC = () => {
                 <Chip
                   label={getRoleName(profile.role)}
                   sx={{
-                    color: '#fff',
+                    color: 'var(--text)',
                     fontWeight: 800,
                     fontSize: 16,
                     px: 1,
                     py: 1.4,
                     height: 'auto',
-                    background: `linear-gradient(135deg, ${getRoleColor(profile.role)}, rgba(0,0,0,0.35))`,
-                    boxShadow: `0 4px 18px ${getRoleColor(profile.role)}55`,
-                    border: `1px solid ${getRoleColor(profile.role)}99`,
+                    background: 'var(--accent-soft)',
+                    border: '1px solid var(--accent-border)',
                     letterSpacing: '0.04em',
                   }}
                 />
@@ -489,7 +468,7 @@ const ProfilePage: React.FC = () => {
         <Card sx={{ mb: 3, overflow: 'hidden' }} className="fade-in">
           <CardContent sx={{ p: { xs: 2.5, sm: 3.5 } }}>
             <Typography variant="h6" className="title-font" display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-              <MilitaryTech sx={{ color: '#fdcb6e' }} />
+              <MilitaryTech sx={{ color: 'var(--accent)' }} />
               Обновить роль в команде
             </Typography>
 
@@ -513,16 +492,15 @@ const ProfilePage: React.FC = () => {
                     }
                     onClick={() => setRole(r.v)}
                     sx={{
-                      background: active ? `linear-gradient(180deg, ${getRoleColor(r.v)}, rgba(0,0,0,0.4))` : 'rgba(255,255,255,0.04)',
-                      color: active ? '#fff' : '#a7b0bd',
-                      border: active ? `1px solid ${getRoleColor(r.v)}99` : '1px solid rgba(255,255,255,0.08)',
+                      background: active ? 'var(--accent-soft)' : 'rgba(255,255,255,0.04)',
+                      color: active ? 'var(--text)' : 'var(--text-dim)',
+                      border: active ? '1px solid var(--accent-border)' : '1px solid var(--border)',
                       fontWeight: 700,
                       px: 0.5,
                       py: 1.6,
                       height: 'auto',
                       fontSize: 14,
                       transition: 'all 0.2s ease',
-                      boxShadow: active ? `0 4px 18px ${getRoleColor(r.v)}55` : 'none',
                       '&:hover': {
                         transform: active ? 'translateY(-1px)' : 'scale(1.02)',
                       },
@@ -534,12 +512,18 @@ const ProfilePage: React.FC = () => {
 
             <Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
               <FormControl size="small" sx={{ minWidth: 220 }}>
-                <InputLabel sx={{ color: '#a7b0bd' }}>Или выберите из списка</InputLabel>
+                <InputLabel sx={{ color: 'var(--text-dim)' }}>Или выберите из списка</InputLabel>
                 <Select
                   value={role}
                   label="Или выберите из списка"
                   onChange={(e) => setRole(e.target.value as string)}
-                  sx={{ color: '#fff' }}
+                  sx={{
+                    color: 'var(--text)',
+                    background: 'rgba(255,255,255,0.03)',
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--border)' },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--border-strong)' },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--accent)' },
+                  }}
                 >
                   <MenuItem value="carry">Керри — фарм и урон</MenuItem>
                   <MenuItem value="mid">Мид — соло-линия</MenuItem>
